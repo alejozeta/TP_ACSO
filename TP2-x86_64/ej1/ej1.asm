@@ -38,21 +38,23 @@ string_proc_node_create_asm:
     push rbp
     mov rbp, rsp
 
-    mov edi, 32        ; sizeof(string_proc_node), por padding
+    mov edi, 32             ; sizeof(string_proc_node)
     call malloc
     test rax, rax
     jz .fail
 
-    mov rcx, rax       ; guardar puntero al nodo
+    mov rcx, rax            ; rcx = pointer to the new node
+
+    mov r8, rdx             ; save hash (3rd arg) in r8 for later use
 
     xor rdx, rdx
-    mov [rcx], rdx     ; next = NULL
-    mov [rcx+8], rdx   ; previous = NULL
+    mov [rcx], rdx          ; node->next = NULL
+    mov [rcx+8], rdx        ; node->previous = NULL
 
-    mov byte [rcx+16], sil    ; type (uint8_t)
-    mov [rcx+24], rdx         ; hash (ya estaba en rdx)
+    mov byte [rcx+16], sil  ; node->type = type (2nd arg)
+    mov [rcx+24], r8        ; node->hash = hash
 
-    mov rax, rcx
+    mov rax, rcx            ; return the new node
     pop rbp
     ret
 
@@ -60,6 +62,7 @@ string_proc_node_create_asm:
     xor rax, rax
     pop rbp
     ret
+
 
 string_proc_list_add_node_asm:
     push rbp
