@@ -1,77 +1,79 @@
 #include "ej1.h"
 
-string_proc_list* string_proc_list_create(void){
-	string_proc_list* list = (string_proc_list*)malloc(sizeof(string_proc_list));
-	if(list == NULL){
-		return NULL;
-	}
-	list->first = NULL;
-	list->last  = NULL;
-	return list;
+string_proc_list* string_proc_list_create(void) {
+    string_proc_list* list = (string_proc_list*)malloc(sizeof(string_proc_list));
+    if (list == NULL) {
+        return NULL;
+    }
+    list->first = NULL;
+    list->last = NULL;
+    return list;
 }
 
 
-string_proc_node* string_proc_node_create(uint8_t type, char* hash){
-	string_proc_node* node = (string_proc_node*)malloc(sizeof(string_proc_node));
-	if(node == NULL){
-		return NULL;
-	}
-	node->next      = NULL;
-	node->previous  = NULL;
-	node->hash      = hash;
-	node->type      = type;			
-	return node;
+
+string_proc_node* string_proc_node_create(uint8_t type, char* hash) {
+    string_proc_node* node = (string_proc_node*)malloc(sizeof(string_proc_node));
+    if (node == NULL) {
+        return NULL;
+    }
+    node->next = NULL;
+    node->previous = NULL;
+    node->type = type;
+
+    // Duplica la cadena si querés asegurar independencia de memoria
+    node->hash = hash; // o strdup(hash) si querés copiarla
+    return node;
 }
 
 
-void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash){
-	string_proc_node* new_node = string_proc_node_create(type, hash);
-	if(new_node == NULL){
-		return;
-	}
-	if(list->first == NULL){
-		list->first = new_node;
-		list->last  = new_node;
-	}else{
-		new_node->previous = list->last;
-		list->last->next   = new_node;
-		list->last        = new_node;
-	}
+
+void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash) {
+    if (list == NULL) return;
+
+    string_proc_node* new_node = string_proc_node_create(type, hash);
+    if (new_node == NULL) return;
+
+    if (list->first == NULL) {
+        list->first = new_node;
+        list->last = new_node;
+    } else {
+        new_node->previous = list->last;
+        list->last->next = new_node;
+        list->last = new_node;
+    }
 }
 
 
-char* string_proc_list_concat(string_proc_list* list, uint8_t type , char* hash){
-	if (list == NULL || list->first == NULL) {
-		return NULL;
-	}
 
-	// 1. Calcular longitud total requerida
-	size_t total_len = 0;
-	string_proc_node* current_node = list->first;
-	while (current_node != NULL) {
-		total_len += strlen(current_node->hash);
-		current_node = current_node->next;
-	}
+char* string_proc_list_concat(string_proc_list* list, uint8_t type, char* hash) {
+    if (list == NULL || list->first == NULL) {
+        return NULL;
+    }
 
-	// 2. Reservar memoria
-	char* result = (char*)malloc(total_len + 1); // +1 para '\0'
-	if (result == NULL) {
-		return NULL;
-	}
+    size_t total_len = 0;
+    string_proc_node* current = list->first;
+    while (current != NULL) {
+        total_len += strlen(current->hash);
+        current = current->next;
+    }
 
-	// 3. Copiar directamente usando punteros
-	char* ptr = result;
-	current_node = list->first;
-	while (current_node != NULL) {
-		size_t len = strlen(current_node->hash);
-		memcpy(ptr, current_node->hash, len);
-		ptr += len;
-		current_node = current_node->next;
-	}
-	*ptr = '\0';
+    char* result = (char*)malloc(total_len + 1);
+    if (result == NULL) return NULL;
 
-	return result;
+    char* ptr = result;
+    current = list->first;
+    while (current != NULL) {
+        size_t len = strlen(current->hash);
+        memcpy(ptr, current->hash, len);
+        ptr += len;
+        current = current->next;
+    }
+    *ptr = '\0';
+
+    return result;
 }
+
 
 	
 
