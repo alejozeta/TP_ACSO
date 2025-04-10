@@ -30,12 +30,12 @@ void test_ej1b(char* filename);
 int main() {
 	printf("Ejercicio 1\n");
 	srand(0);
-	printf("AAAA");
 	remove(filename_ej1);
-	printf("1 a");
+	printf("1 a\n");
 	test_ej1a(filename_ej1);
-	printf("1 b");
+	printf("1 b \n");
 	test_ej1b(filename_ej1);
+	printf("Salio del 1b\n");
 	return 0;
 }
 
