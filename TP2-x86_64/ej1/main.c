@@ -49,7 +49,7 @@ void test_list_concat()
 }
 
 /**
-* Corre los test a se escritos por lxs alumnxs	
+* Corre los test a se escritos por los alumnos	
 */
 void run_tests(){
 
