@@ -19,9 +19,18 @@ extern str_concat
 
 
 string_proc_list_create_asm:
-    xor rax, rax          ; poner rax a 0 (NULL)
-    mov [rdi], rax        ; list->first = NULL
-    mov [rdi+8], rax      ; list->last = NULL
+    mov edi, 16         ; sizeof(string_proc_list)
+    call malloc
+    test rax, rax
+    jz .fail
+
+    xor rcx, rcx
+    mov [rax], rcx      ; first = NULL
+    mov [rax+8], rcx    ; last  = NULL
+    ret
+
+.fail:
+    xor rax, rax
     ret
 
 
@@ -29,28 +38,19 @@ string_proc_node_create_asm:
     push rbp
     mov rbp, rsp
 
-    mov edi, 24           ; tamaño de string_proc_node (3 punteros + 1 byte + padding)
-    call malloc           ; malloc(24)
+    mov edi, 32        ; sizeof(string_proc_node), por padding
+    call malloc
     test rax, rax
     jz .fail
 
-    ; rax tiene el puntero al nuevo nodo
-    mov rcx, rax          ; guardar puntero del nodo en rcx
+    mov rcx, rax       ; guardar puntero al nodo
 
-    ; next = NULL
     xor rdx, rdx
-    mov [rcx], rdx
+    mov [rcx], rdx     ; next = NULL
+    mov [rcx+8], rdx   ; previous = NULL
 
-    ; previous = NULL
-    mov [rcx+8], rdx
-
-    ; type
-    movzx rsi, sil        ; type está en sil (segundo argumento)
-    mov [rcx+16], sil
-
-    ; hash
-    mov rdx, rdx          ; hash está en rdx (tercer argumento)
-    mov [rcx+18], rdx
+    mov byte [rcx+16], sil    ; type (uint8_t)
+    mov [rcx+24], rdx         ; hash (ya estaba en rdx)
 
     mov rax, rcx
     pop rbp
@@ -60,7 +60,6 @@ string_proc_node_create_asm:
     xor rax, rax
     pop rbp
     ret
-
 
 string_proc_list_add_node_asm:
     push rbp
