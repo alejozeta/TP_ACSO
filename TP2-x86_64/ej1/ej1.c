@@ -95,6 +95,9 @@ void string_proc_list_destroy(string_proc_list* list) {
 }
 
 void string_proc_node_destroy(string_proc_node* node){
+	if (node == NULL){
+		return;
+	}
 	node->next      = NULL;
 	node->previous	= NULL;
 	node->hash		= NULL;
@@ -114,17 +117,17 @@ char* str_concat(char* a, char* b) {
 }
 
 void string_proc_list_print(string_proc_list* list, FILE* file){
-        uint32_t length = 0;
-        string_proc_node* current_node  = list->first;
-        while(current_node != NULL){
-                length++;
-                current_node = current_node->next;
-        }
-        fprintf( file, "List length: %d\n", length );
-		current_node    = list->first;
-        while(current_node != NULL){
-                fprintf(file, "\tnode hash: %s | type: %d\n", current_node->hash, current_node->type);
-                current_node = current_node->next;
-        }
+	uint32_t length = 0;
+	string_proc_node* current_node  = list->first;
+	while(current_node != NULL){
+			length++;
+			current_node = current_node->next;
+	}
+	fprintf( file, "List length: %d\n", length );
+	current_node    = list->first;
+	while(current_node != NULL){
+			fprintf(file, "\tnode hash: %s | type: %d\n", current_node->hash, current_node->type);
+			current_node = current_node->next;
+	}
 }
 
