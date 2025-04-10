@@ -20,16 +20,13 @@ string_proc_node* string_proc_node_create(uint8_t type, char* hash) {
     node->next = NULL;
     node->previous = NULL;
     node->type = type;
-
-    // Duplica la cadena si querés asegurar independencia de memoria
-    node->hash = hash; // o strdup(hash) si querés copiarla
+    node->hash = hash;
     return node;
 }
 
 
 
 void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash) {
-    if (list == NULL) return;
 
     string_proc_node* new_node = string_proc_node_create(type, hash);
     if (new_node == NULL) return;
@@ -38,8 +35,8 @@ void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash)
         list->first = new_node;
         list->last = new_node;
     } else {
-        new_node->previous = list->last;
         list->last->next = new_node;
+		new_node->previous = list->last;
         list->last = new_node;
     }
 }
@@ -51,25 +48,19 @@ char* string_proc_list_concat(string_proc_list* list, uint8_t type, char* hash) 
         return NULL;
     }
 
-    size_t total_len = 0;
-    string_proc_node* current = list->first;
-    while (current != NULL) {
-        total_len += strlen(current->hash);
-        current = current->next;
-    }
-
-    char* result = (char*)malloc(total_len + 1);
-    if (result == NULL) return NULL;
-
-    char* ptr = result;
-    current = list->first;
-    while (current != NULL) {
-        size_t len = strlen(current->hash);
-        memcpy(ptr, current->hash, len);
-        ptr += len;
-        current = current->next;
-    }
-    *ptr = '\0';
+    char* result = strdup(hash);
+	if (result == NULL) {
+		return NULL;
+	}
+	string_proc_node* current = list->first;
+	while (current != NULL) {
+		if (current->type == type) {
+			char* temp = str_concat(result, current->hash);
+			free(result);
+			result = temp;
+		}
+		current = current->next;
+	}
 
     return result;
 }
