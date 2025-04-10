@@ -59,16 +59,20 @@ char* string_proc_list_concat(string_proc_list* list, uint8_t type , char* hash)
 		return NULL;
 	}
 
-	// 3. Copiar las cadenas una por una
-	result[0] = '\0';  // inicializar
+	// 3. Copiar directamente usando punteros
+	char* ptr = result;
 	current_node = list->first;
 	while (current_node != NULL) {
-		strcat(result, current_node->hash);
+		size_t len = strlen(current_node->hash);
+		memcpy(ptr, current_node->hash, len);
+		ptr += len;
 		current_node = current_node->next;
 	}
+	*ptr = '\0';
 
 	return result;
 }
+
 	
 
 
