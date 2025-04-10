@@ -1,6 +1,4 @@
 #include "ej1.h"
-#include <stdlib.h>
-#include <string.h>
 
 string_proc_list* string_proc_list_create(void) {
     string_proc_list* list = (string_proc_list*)malloc(sizeof(string_proc_list));
@@ -101,22 +99,15 @@ void string_proc_node_destroy(string_proc_node* node){
 }
 
 
-char* str_concat(const char* a, const char* b) {
-    if (a == NULL || b == NULL) return NULL;
-
-    int len1 = strlen(a);
+char* str_concat(char* a, char* b) {
+	int len1 = strlen(a);
     int len2 = strlen(b);
-    int totalLength = len1 + len2;
-
-    char* result = (char*)malloc(totalLength + 1); // +1 para '\0'
-    if (result == NULL) return NULL;
-
+	int totalLength = len1 + len2;
+    char *result = (char *)malloc(totalLength + 1); 
     strcpy(result, a);
     strcat(result, b);
-    
-    return result;
+    return result;  
 }
-
 
 void string_proc_list_print(string_proc_list* list, FILE* file){
 	uint32_t length = 0;
