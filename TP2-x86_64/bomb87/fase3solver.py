@@ -37,7 +37,7 @@ def buscar_inputs_validos():
         try:
             resultado = cuenta(palabra, lineas, i - 1, 0)
             if 401 <= resultado <= 799:
-                print(f"✅ Entrada válida encontrada: {resultado} para '{palabra}' en el rango 0–{i-1}")
+                print(f"✅ Entrada válida encontrada: {resultado} para '{palabra}'")
                 encontrados.append((resultado, palabra, i))
         except:
             continue
