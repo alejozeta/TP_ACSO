@@ -28,19 +28,19 @@ def buscar_inputs_validos():
     lineas = readlines_mock()
     encontrados = []
 
-    for i in range(1, len(lineas) + 1):
-        for palabra in lineas:
-            print(f"🔍 Buscando '{palabra}' en el rango 0–{i-1}...")
 
-            os.system("clear")  # <-- limpia la terminal
+    for palabra in lineas:
+        print(f"🔍 Buscando '{palabra}' en el rango 0–{i-1}...")
 
-            try:
-                resultado = cuenta(palabra, lineas, i - 1, 0)
-                if 401 <= resultado <= 799:
-                    print(f"✅ Entrada válida encontrada: {resultado} para '{palabra}' en el rango 0–{i-1}")
-                    encontrados.append((resultado, palabra, i))
-            except:
-                continue
+        os.system("clear")  # <-- limpia la terminal
+
+        try:
+            resultado = cuenta(palabra, lineas, i - 1, 0)
+            if 401 <= resultado <= 799:
+                print(f"✅ Entrada válida encontrada: {resultado} para '{palabra}' en el rango 0–{i-1}")
+                encontrados.append((resultado, palabra, i))
+        except:
+            continue
 
     os.system("clear")
     if encontrados:
