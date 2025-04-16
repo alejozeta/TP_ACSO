@@ -1,14 +1,11 @@
-import os
-import time
-
 def readlines_mock(path="palabras.txt"):
     with open(path, "r") as f:
         return [line.strip() for line in f.readlines()]
 
 def cuenta(palabra, lineas, alto, bajo):
     if bajo > alto:
-        return 0  # fuera de rango
-
+        raise Exception("explode_bomb: fuera de rango")
+    
     mid = (alto + bajo) // 2
     linea = lineas[mid]
     c = ord(linea[0])
@@ -26,31 +23,20 @@ def cuenta(palabra, lineas, alto, bajo):
 
 def buscar_inputs_validos():
     lineas = readlines_mock()
-    encontrados = []
-
+    alto = len(lineas) - 1
+    resultados = []
 
     for palabra in lineas:
-        i = lineas.index(palabra) + 1
-        print(f"🔍 Buscando '{palabra}' en el rango 0–{i-1}...")
-
-        os.system("clear")  # <-- limpia la terminal
-
         try:
-            resultado = cuenta(palabra, lineas, i - 1, 0)
-            if 401 <= resultado <= 799:
-                print(f"✅ Entrada válida encontrada: {resultado} para '{palabra}'")
-                encontrados.append((resultado, palabra, i))
+            valor = cuenta(palabra, lineas, alto, 0)
+            resultados.append((valor, palabra))
         except:
-            continue
+            continue  # ignora casos que causarían una bomba
 
-    os.system("clear")
-    if encontrados:
-        print("🎯 Entradas válidas encontradas:")
-        for r, p, i in encontrados:
-            print(f"  ➤ Número: {r}, Palabra: {p}, Índice: {i}")
-        print("\n👉 Usá cualquiera como input: '<número> <palabra>'")
-    else:
-        print("❌ No se encontró ninguna entrada válida.")
+    return resultados
 
+# Mostrar posibles pares válidos: (numero, palabra)
 if __name__ == "__main__":
-    buscar_inputs_validos()
+    inputs_validos = buscar_inputs_validos()
+    for num, palabra in inputs_validos:
+        print(f"{num} {palabra}")
