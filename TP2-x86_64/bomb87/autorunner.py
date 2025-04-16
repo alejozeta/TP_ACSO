@@ -1,5 +1,9 @@
 import subprocess
 
+# Fase 1 y 2 conocidas
+FASE_1 = "Confia en el tiempo, que suele dar dulces salidas a muchas amargas dificultades"
+FASE_2 = "-1000 7062"
+
 def readlines_mock(path="palabras.txt"):
     with open(path, "r") as f:
         return [line.strip() for line in f.readlines()]
@@ -7,7 +11,7 @@ def readlines_mock(path="palabras.txt"):
 def cuenta(palabra, lineas, alto, bajo):
     if bajo > alto:
         raise Exception("explode_bomb: fuera de rango")
-    
+
     mid = (alto + bajo) // 2
     linea = lineas[mid]
     c = ord(linea[0])
@@ -23,7 +27,7 @@ def cuenta(palabra, lineas, alto, bajo):
             raise Exception("explode_bomb: izquierda")
         return c + cuenta(palabra, lineas, mid - 1, bajo)
 
-def buscar_input_valido():
+def buscar_input_fase3():
     lineas = readlines_mock()
     alto = len(lineas) - 1
 
@@ -34,14 +38,14 @@ def buscar_input_valido():
                 return f"{res} {palabra}"
         except:
             continue
-
     return None
 
-def ejecutar_fase3_con_input(input_str, archivo="input_fase3.txt", binario="./bomb"):
+def ejecutar_bomb_con_input(input_total, archivo="input_bomb.txt", binario="./bomb"):
     with open(archivo, "w") as f:
-        f.write(input_str + "\n")
-    
-    print(f"Probando con input: {input_str}")
+        for linea in input_total:
+            f.write(linea + "\n")
+
+    print(f"Probando con input:\n{chr(10).join(input_total)}\n")
     result = subprocess.run([binario], stdin=open(archivo), capture_output=True, text=True)
 
     if "BOOM" in result.stdout or "explode_bomb" in result.stderr:
@@ -51,8 +55,9 @@ def ejecutar_fase3_con_input(input_str, archivo="input_fase3.txt", binario="./bo
         print(result.stdout)
 
 if __name__ == "__main__":
-    input_fase3 = buscar_input_valido()
-    if input_fase3:
-        ejecutar_fase3_con_input(input_fase3)
+    fase3 = buscar_input_fase3()
+    if fase3:
+        input_total = [FASE_1, FASE_2, fase3]
+        ejecutar_bomb_con_input(input_total)
     else:
-        print("❌ No se encontró ningún input válido.")
+        print("❌ No se encontró un input válido para fase 3.")
