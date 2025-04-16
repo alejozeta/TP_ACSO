@@ -1,9 +1,10 @@
-def readlines_mock(path="./TP2-x86_64/bomb87/palabras.txt"):
+def readlines_mock(path="palabras.txt"):
     with open(path, "r") as f:
         return [line.strip() for line in f.readlines()]
+
 def cuenta(palabra, lineas, alto, bajo):
     if bajo > alto:
-        return 0  # nunca debería llegar acá
+        return 0  # fuera de rango
 
     mid = (alto + bajo) // 2
     linea = lineas[mid]
@@ -20,21 +21,26 @@ def cuenta(palabra, lineas, alto, bajo):
             raise Exception("explode_bomb: izquierda")
         return c + cuenta(palabra, lineas, mid - 1, bajo)
 
-def buscar_input_valido():
+def buscar_inputs_validos():
     lineas = readlines_mock()
+    encontrados = []
+
     for i in range(1, len(lineas) + 1):
         for palabra in lineas:
             try:
                 resultado = cuenta(palabra, lineas, i - 1, 0)
                 if 401 <= resultado <= 799:
-                    print("\n🎉 ¡Input válido encontrado!")
-                    print(f"🧮 Número : {resultado}")
-                    print(f"📝 Palabra: {palabra}")
-                    print(f"🔢 Índice : {i}")
-                    return
+                    encontrados.append((resultado, palabra, i))
             except:
                 continue
-    print("❌ No se encontró ningún input válido.")
+
+    if encontrados:
+        print("🎯 Entradas válidas encontradas:")
+        for r, p, i in encontrados:
+            print(f"  ➤ Número: {r}, Palabra: {p}, Índice: {i}")
+        print("\n👉 Usá cualquiera como input: '<número> <palabra>'")
+    else:
+        print("❌ No se encontró ninguna entrada válida.")
 
 if __name__ == "__main__":
-    buscar_input_valido()
+    buscar_inputs_validos()
