@@ -1,63 +1,40 @@
-import subprocess
+from pathlib import Path
 
-# Fase 1 y 2 conocidas
-FASE_1 = "Confia en el tiempo, que suele dar dulces salidas a muchas amargas dificultades"
-FASE_2 = "-1000 7062"
+def leer_lineas(path="palabras.txt"):
+    """Emula readlines del binario."""
+    return [l.rstrip("\n") for l in Path(path).read_text(encoding="latin1").splitlines()]
 
-def readlines_mock(path="palabras.txt"):
-    with open(path, "r") as f:
-        return [line.strip() for line in f.readlines()]
+def cuenta(palabra, lineas, low, high):
+    """Traducción directa de la función `cuenta` del ensamblador."""
+    if low > high:
+        raise ValueError("explode_bomb: fuera de rango")
 
-def cuenta(palabra, lineas, alto, bajo):
-    if bajo > alto:
-        raise Exception("explode_bomb: fuera de rango")
+    mid = (low + high) // 2
+    linea_mid = lineas[mid]
+    c = ord(linea_mid[0])
 
-    mid = (alto + bajo) // 2
-    linea = lineas[mid]
-    c = ord(linea[0])
-
-    if palabra == linea:
+    if palabra == linea_mid:
         return c
-    elif palabra > linea:
-        if mid >= alto:
-            raise Exception("explode_bomb: derecha")
-        return c + cuenta(palabra, lineas, alto, mid + 1)
-    else:
-        if mid <= bajo:
-            raise Exception("explode_bomb: izquierda")
-        return c + cuenta(palabra, lineas, mid - 1, bajo)
+    elif palabra > linea_mid:
+        if mid >= high:
+            raise ValueError("explode_bomb: derecha")
+        return c + cuenta(palabra, lineas, mid + 1, high)
+    else:  # palabra < linea_mid
+        if mid <= low:
+            raise ValueError("explode_bomb: izquierda")
+        return c + cuenta(palabra, lineas, low, mid - 1)
 
-def buscar_input_fase3():
-    lineas = readlines_mock()
-    alto = len(lineas) - 1
+lineas = leer_lineas()           # Vector ordenado
+validos = []
 
-    for palabra in lineas:
-        try:
-            res = cuenta(palabra, lineas, alto, 0)
-            if 401 <= res <= 799:
-                return f"{res} {palabra}"
-        except:
-            continue
-    return None
+for w in lineas:
+    try:
+        s = cuenta(w, lineas, 0, len(lineas) - 1)
+        if 401 <= s <= 799:
+            validos.append((w, s))
+    except ValueError:
+        pass                      # Ruta inválida → descartar
 
-def ejecutar_bomb_con_input(input_total, archivo="input_bomb.txt", binario="./bomb"):
-    with open(archivo, "w") as f:
-        for linea in input_total:
-            f.write(linea + "\n")
-
-    print(f"Probando con input:\n{chr(10).join(input_total)}\n")
-    result = subprocess.run([binario], stdin=open(archivo), capture_output=True, text=True)
-
-    if "BOOM" in result.stdout or "explode_bomb" in result.stderr:
-        print("💥 La bomba explotó.")
-    else:
-        print("✅ ¡Fase 3 superada!")
-        print(result.stdout)
-
-if __name__ == "__main__":
-    fase3 = buscar_input_fase3()
-    if fase3:
-        input_total = [FASE_1, FASE_2, fase3]
-        ejecutar_bomb_con_input(input_total)
-    else:
-        print("❌ No se encontró un input válido para fase 3.")
+print(f"Encontré {len(validos)} candidatos. Ejemplos:")
+for w, s in validos[:10]:
+    print(f"{w} {s}")
