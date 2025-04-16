@@ -30,6 +30,7 @@ def buscar_inputs_validos():
 
 
     for palabra in lineas:
+        i = lineas.index(palabra) + 1
         print(f"🔍 Buscando '{palabra}' en el rango 0–{i-1}...")
 
         os.system("clear")  # <-- limpia la terminal
