@@ -1,42 +1,38 @@
-def readlines_mock(path="palabras.txt"):
+def readlines(path="palabras.txt"):
     with open(path, "r") as f:
         return [line.strip() for line in f.readlines()]
 
-def cuenta(palabra, lineas, alto, bajo):
+def explode_bomb():
+    raise Exception("BOOM 💣")
+
+def cuenta(palabra, lineas, bajo, alto):
     if bajo > alto:
-        raise Exception("explode_bomb: fuera de rango")
-    
-    mid = (alto + bajo) // 2
+        explode_bomb()
+
+    mid = (bajo + alto) // 2
     linea = lineas[mid]
-    c = ord(linea[0])
+    ascii_val = ord(linea[0])
 
     if palabra == linea:
-        return c
+        return ascii_val
     elif palabra > linea:
         if mid >= alto:
-            raise Exception("explode_bomb: derecha")
-        return c + cuenta(palabra, lineas, alto, mid + 1)
+            explode_bomb()
+        return ascii_val + cuenta(palabra, lineas, mid + 1, alto)
     else:
         if mid <= bajo:
-            raise Exception("explode_bomb: izquierda")
-        return c + cuenta(palabra, lineas, mid - 1, bajo)
+            explode_bomb()
+        return ascii_val + cuenta(palabra, lineas, bajo, mid - 1)
 
 def buscar_inputs_validos():
-    lineas = readlines_mock()
-    alto = len(lineas) - 1
-    resultados = []
-
+    lineas = readlines()
+    lineas.sort()
     for palabra in lineas:
         try:
-            valor = cuenta(palabra, lineas, alto, 0)
-            resultados.append((valor, palabra))
-        except:
-            continue  # ignora casos que causarían una bomba
+            valor = cuenta(palabra, lineas, 0, len(lineas) - 1)
+            if 401 <= valor <= 799:
+                print(f"Palabra: '{palabra}', Input correcto 2: {valor}")
+        except Exception:
+            continue
 
-    return resultados
-
-# Mostrar posibles pares válidos: (numero, palabra)
-if __name__ == "__main__":
-    inputs_validos = buscar_inputs_validos()
-    for num, palabra in inputs_validos:
-        print(f"{num} {palabra}")
+buscar_inputs_validos()
