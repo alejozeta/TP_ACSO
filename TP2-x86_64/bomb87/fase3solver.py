@@ -1,3 +1,6 @@
+import os
+import time
+
 def readlines_mock(path="palabras.txt"):
     with open(path, "r") as f:
         return [line.strip() for line in f.readlines()]
@@ -26,9 +29,11 @@ def buscar_inputs_validos():
     encontrados = []
 
     for i in range(1, len(lineas) + 1):
-    
         for palabra in lineas:
-            print(f"Buscando '{palabra}' en la línea {i}...")
+            print(f"🔍 Buscando '{palabra}' en el rango 0–{i-1}...")
+
+            os.system("clear")  # <-- limpia la terminal
+
             try:
                 resultado = cuenta(palabra, lineas, i - 1, 0)
                 if 401 <= resultado <= 799:
@@ -36,6 +41,7 @@ def buscar_inputs_validos():
             except:
                 continue
 
+    os.system("clear")
     if encontrados:
         print("🎯 Entradas válidas encontradas:")
         for r, p, i in encontrados:
