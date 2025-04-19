@@ -57,11 +57,6 @@ string_proc_node_create_asm:
     ; Extraer el byte bajo (dil) y extenderlo a 32 bits en ecx
     movzx   ecx, dil             ; ecx ← (uint8_t) type
     
-    mov     edi, fmt_type
-    mov     esi, ecx
-    xor     eax, eax
-    call    printf
-
     ; Inicializar campos del nodo
     mov     qword [rax], 0        ; node->next = NULL
     mov     qword [rax + 8], 0    ; node->previous = NULL
