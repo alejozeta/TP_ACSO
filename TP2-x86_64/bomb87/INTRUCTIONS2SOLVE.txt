@@ -1,0 +1,38 @@
+1. Para fase 1, el desactivado es bastante simple... simplemente compara el input del usuario con un string fijo en una direccion de memoria.
+En mi caso la direccion de memoria era 0x4c5158 y con un simple comando en el gdb me dio la frase secreta para desactivar la bomba.
+"Confia en el tiempo, que suele dar dulces salidas a muchas amargas dificultades" la cual es una frase de miguel de cervantes.
+
+2. La fase dos ya era un poco mas compleja. y el input tenia mas requisitos como por ejemplo: tenian q ser dos inputs numericos. 
+Primero, llamaba a otra funcion --misterio-- la cual hacia un xor entre mis dos inputs. Ese resultado tenia que ser negativo.
+js	0x401f41 <misterio+0x16>, si era positivo el resultado del xor explotaba. Tambie, viendo el codigo, los inputs tenian q cumplir:
+Sean x e y mis dos inputs. Ni x ni y podia ser 0, la suma de ambos tenia que ser 6062, x xor y <0 o sea que tenian q ser de signos opuestos.
+=> habian un par de valores que funcionaban. yo elegi -1000, 7062.
+
+3. para la fase 3, ya la complejidad subio mucho. y hacia tantas cosas que tuve que crear un scipt en python para resolverlo. el script se llama 
+autorunner.py y se encuentra en este directorio. Con correr el archivo les deberia de decir un par de los posibles inputs ya que habia 157. yo elegi
+la primer repuesta. 'abatatar 782' simplemente porque me dio gracia la palabra abatatar. cualquiera de los otros funcionan.
+Que hacia la fase 3?
+Hacia una busqueda binaria sumando los valores en ASCII de las primeras letras. comparaba mi input con la palabra en el medio del archivo de palabras.
+Luego iba cambiando el intervalo del archivo. y asi iteraba. El input era una palabra y un numero. el numero tenia que estar entre 401 y 799 y el 
+valor tenia q ser igual a lo q devolvia la funcion cuenta => la suma de todos los acsii de las primeras letras.
+
+4. La fase 4 recibia solo un string de entrada. El largo tenia que ser de exactamente 6 caracteres.
+En la direccion de memoria 0x4c51f3 se encontraba la palabra "felina" 
+y si corro x/16cb 0x4c5200   me devolvia un array de 16 bytes
+0x4c5200 <array.3476>:  101 'e' 103 'g' 109 'm' 99 'c'  102 'f' 97 'a'  105 'i' 106 'j'
+0x4c5208 <array.3476+8>:        111 'o' 112 'p' 110 'n' 104 'h' 100 'd' 98 'b'  107 'k' 108 'l'
+
+la tabla dice que = [e,g,m,c,f,a,i,j,o,p,n,h,d,b,k,l] con sus respectivos indices del 0,15 o del 0x00 al 0x0F
+los indices de felina:
+f -> 4
+e -> 0
+l -> F
+i -> 6
+n -> A
+a -> 5
+
+ahora necesito que los nibbles bajos del input sean iguales a 40F6A5
+el ascii del 4 = 52 lo cual su nibble es 16
+basicamente busco caracteres que cuando haga su numero ascii mod 16 = indice
+hay mas de una respuesta. yo elegi 40?6j5
+

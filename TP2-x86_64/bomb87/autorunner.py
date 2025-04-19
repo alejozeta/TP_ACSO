@@ -5,7 +5,6 @@ def leer_lineas(path="palabras.txt"):
     return [l.rstrip("\n") for l in Path(path).read_text(encoding="latin1").splitlines()]
 
 def cuenta(palabra, lineas, low, high):
-    """Traducción directa de la función `cuenta` del ensamblador."""
     if low > high:
         raise ValueError("explode_bomb: fuera de rango")
 
