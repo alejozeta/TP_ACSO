@@ -47,7 +47,7 @@ string_proc_node_create_asm:
 
     ; tomar 'type' desde esi (porque el compilador lo pasó mal)
     mov     ecx, esi
-    and     ecx, 0xFF             ; forzar a uint8_t
+
     mov     byte [rax + 16], cl
 
     mov     qword [rax], 0
