@@ -116,73 +116,78 @@ string_proc_list_add_node_asm:
 
 
 string_proc_list_concat_asm:
-    ; rdi = list, sil = type, rdx = hash
+    push    rbp
+    mov     rbp, rsp
     push    rbx
     push    r12
     push    r13
-    push    r14
-    push    r15
+    push    r14                    ; rbx,r12‑r15 son callee‑saved
 
-    test    rdi, rdi
-    je      .return_null_concat
+    mov     rbx, rdi               ; rbx = list
+    mov     r13d, esi              ; r13b = type (guardado)
 
-    mov     rbx, rdi            ; rbx = list
-    mov     r12, rdx            ; r12 = hash
-    mov     r13b, sil           ; r13b = type
+    ; if (list == NULL) return NULL;
+    test    rbx, rbx
+    je      .ret_null
 
-    mov     r14, [rbx]          ; r14 = list->first
-    test    r14, r14
-    je      .return_null_concat
+    ; current = list->first
+    mov     r12, [rbx]             ; r12 = current
+    test    r12, r12               ; if (current == NULL) return NULL;
+    je      .ret_null
 
-    ; malloc(strlen(hash) + 1)
-    mov     rdi, r12
-    call    strlen
-    inc     rax
-    mov     rdi, rax
+    ; -------- result = malloc(strlen(hash)+1) ------------------------
+    mov     rdi, rdx               ; rdi = hash
+    call    strlen                 ; rax = strlen(hash)
+    inc     rax                    ; +1
+    mov     rdi, rax               ; arg de malloc
     call    malloc
     test    rax, rax
-    je      .return_null_concat
+    je      .ret_null
+    mov     r14, rax               ; r14 = result
 
-    mov     r15, rax            ; r15 = result
-    mov     rdi, r15
-    mov     rsi, r12
-    call    strcpy              ; strcpy(result, hash)
+    ; -------- strcpy(result, hash) ----------------------------------
+    mov     rdi, r14               ; dest
+    mov     rsi, rdx               ; src = hash
+    call    strcpy                 ; (valor devuelto no se usa)
 
-.loop_concat:
-    test    r14, r14
-    je      .done_concat
+    ; -------- while (current != NULL) -------------------------------
+.loop:
+    test    r12, r12
+    je      .done
 
-    ; if (current->type == type)
-    movzx   eax, byte [r14 + 16]
-    cmp     al, r13b
-    jne     .skip_concat
+    ; if (current->type == type) ...
+    cmp     byte [r12 + 16], r13b
+    jne     .next
 
-    ; result = str_concat(result, current->hash)
-    mov     rdi, r15
-    mov     rsi, [r14 + 24]
-    call    str_concat
+    ; ---- temp = str_concat(result, current->hash) ------------------
+    mov     rdi, r14               ; result
+    mov     rsi, [r12 + 24]        ; current->hash
+    call    str_concat             ; rax = temp
 
-    ; free(result)
-    mov     rdi, r15
+    ; free(result);  result = temp;
+    mov     rdi, r14
     call    free
+    mov     r14, rax
 
-    mov     r15, rax            ; result = temp
+.next:
+    mov     r12, [r12]             ; current = current->next
+    jmp     .loop
 
-.skip_concat:
-    mov     r14, [r14]          ; current = current->next
-    jmp     .loop_concat
+.done:
+    mov     rax, r14               ; valor de retorno
 
-.done_concat:
-    mov     rax, r15
-
-.cleanup_concat:
-    pop     r15
     pop     r14
     pop     r13
     pop     r12
     pop     rbx
+    leave
     ret
 
-.return_null_concat:
-    xor     rax, rax
-    jmp     .cleanup_concat
+.ret_null:
+    xor     eax, eax
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rbx
+    leave
+    ret
