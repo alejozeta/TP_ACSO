@@ -38,29 +38,36 @@ string_proc_list_create_asm:
 
 
 string_proc_node_create_asm:
+    ; Reservar memoria para el nodo (tamaño: 32 bytes)
     mov     edi, 32
     call    malloc
+
+    ; Verificar si malloc devolvió NULL
     test    rax, rax
     je      .return_null_node_create
 
-    mov     rdx, rsi              ; hash backup
+    ; Argumentos:
+    ;  - type: viene en edi (int) → vamos a tomar solo los 8 bits bajos
+    ;  - hash: en rsi
 
-    ; tomar 'type' desde esi (porque el compilador lo pasó mal)
-    mov     ecx, esi
+    ; Guardar hash en rdx (por si se pisa)
+    mov     rdx, rsi
 
-    mov     byte [rax + 16], cl
+    ; Tomar los 8 bits bajos de edi (type)
+    mov     ecx, edi
+    and     ecx, 0xFF             ; asegurar solo 8 bits
 
-    mov     qword [rax], 0
-    mov     qword [rax + 8], 0
-    mov     qword [rax + 24], rdx
+    ; Inicializar campos
+    mov     qword [rax], 0        ; node->next = NULL
+    mov     qword [rax + 8], 0    ; node->previous = NULL
+    mov     byte  [rax + 16], cl  ; node->type = (uint8_t)type
+    mov     qword [rax + 24], rdx ; node->hash
+
     ret
 
 .return_null_node_create:
     xor     rax, rax
     ret
-
-
-
 
 
 string_proc_list_add_node_asm:
