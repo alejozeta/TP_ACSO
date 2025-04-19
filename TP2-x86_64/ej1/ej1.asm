@@ -123,12 +123,13 @@ string_proc_list_concat_asm:
     push    r12
     push    r13
     push    r14
-    push    r15                ;   ←  NUEVO: usaremos r15
+    push    r15
 
     mov     rbx, rdi           ; list
-    mov     r13d, esi          ; type (byte bajo: r13b)
+    mov     r13d, esi          ; type (byte bajo = r13b)
+    mov     r15, rdx           ; *** guarda hash aquí *** (se necesita tras strlen)
 
-    ; if (list == NULL || list->first == NULL)  return NULL
+    ; if (list == NULL || list->first == NULL) return NULL
     test    rbx, rbx
     je      .ret_null
     mov     r12, [rbx]         ; current = list->first
@@ -136,7 +137,7 @@ string_proc_list_concat_asm:
     je      .ret_null
 
     ; result = malloc(strlen(hash)+1)
-    mov     rdi, rdx           ; hash
+    mov     rdi, r15           ; hash
     call    strlen
     inc     rax
     mov     rdi, rax
@@ -146,35 +147,37 @@ string_proc_list_concat_asm:
     mov     r14, rax           ; result
 
     ; strcpy(result, hash)
-    mov     rdi, r14
-    mov     rsi, rdx
+    mov     rdi, r14           ; dest
+    mov     rsi, r15           ; src  (hash guardado)
     call    strcpy
 
+    ; ---- bucle principal ------------------------------------
 .loop:
     test    r12, r12
     je      .done
 
-    cmp     byte [r12 + 16], r13b   ; current->type == type ?
+    cmp     byte [r12 + 16], r13b    ; current->type == type ?
     jne     .next
 
-    ; ----- temp = str_concat(result, current->hash) -----
+    ; temp = str_concat(result, current->hash)
     mov     rdi, r14
-    mov     rsi, [r12 + 24]         ; current->hash
-    call    str_concat              ; rax = temp
-    mov     r15, rax                ;   ←  salvar temp ANTES de free
+    mov     rsi, [r12 + 24]
+    call    str_concat               ; rax = temp
+    mov     r15, rax                 ; salvar temp
 
-    mov     rdi, r14                ; free(result)
+    mov     rdi, r14                 ; free(result)
     call    free
 
-    mov     r14, r15                ; result = temp
+    mov     r14, r15                 ; result = temp
 
 .next:
-    mov     r12, [r12]              ; current = current->next
+    mov     r12, [r12]               ; current = current->next
     jmp     .loop
 
 .done:
-    mov     rax, r14                ; return result
+    mov     rax, r14                 ; return result
 
+    ; ─── epílogo ──────────────────────────────────────────────
     pop     r15
     pop     r14
     pop     r13
@@ -192,4 +195,3 @@ string_proc_list_concat_asm:
     pop     rbx
     leave
     ret
-    
