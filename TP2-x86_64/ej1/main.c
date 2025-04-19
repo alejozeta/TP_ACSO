@@ -10,6 +10,7 @@
 */
 void test_create_destroy_list(){
 	string_proc_list * list	= string_proc_list_create_asm();
+	printf(list->first == NULL ? "Lista creada correctamente\n" : "Error al crear la lista\n");
 	string_proc_list_destroy(list);
 }
 
