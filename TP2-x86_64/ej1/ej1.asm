@@ -16,7 +16,8 @@ global string_proc_list_concat_asm
 extern malloc
 extern free
 extern str_concat
-extern strdup ; la agregue yo
+extern strlen
+exterm strcpy
 
 
 string_proc_list_create_asm:
