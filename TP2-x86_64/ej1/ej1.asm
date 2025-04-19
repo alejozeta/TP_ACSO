@@ -59,8 +59,8 @@ string_proc_list_add_node_asm:
     push    rbx
     mov     rbx, rdi
 
-    movzx   edi, sil
-    mov     rsi, rdx
+    mov     rdi, rsi    ; rdi ← type (como unsigned char)
+    mov     rsi, rdx    ; rsi ← hash
     call    string_proc_node_create_asm
 
     test    rax, rax
