@@ -59,8 +59,9 @@ string_proc_list_add_node_asm:
     push    rbx
     mov     rbx, rdi             ; rbx = list
 
-    movzx   edi, sil             ; type (uint8_t) → edi → dil
-    mov     rsi, rdx             ; hash → rsi
+    mov     edi, esi             ; tomar type desde 2do arg
+    and     edi, 0xFF            ; asegurar unsigned char
+    mov     rsi, rdx             ; rsi = hash
     call    string_proc_node_create_asm
 
     test    rax, rax
@@ -83,6 +84,7 @@ string_proc_list_add_node_asm:
 .return_list_add:
     pop     rbx
     ret
+
 
 
 string_proc_list_concat_asm:
