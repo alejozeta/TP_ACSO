@@ -17,7 +17,7 @@ extern malloc
 extern free
 extern str_concat
 extern strlen
-exterm strcpy
+extern strcpy
 
 
 string_proc_list_create_asm:
