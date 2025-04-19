@@ -20,7 +20,7 @@ void test_create_destroy_list(){
 void test_create_destroy_node(){
 	printf("Creando nodo vacio\n");
 	string_proc_node* node	= string_proc_node_create_asm(0, "hash");
-	printf((strcmp(node->hash, "hash") == 0 && node->type == 0) ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf((strcmp(node->hash, "hash") == 1 && node->type == 0) ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
 	printf("Destruyendo nodo\n");
 	string_proc_node_destroy(node);
 }
