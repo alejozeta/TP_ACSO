@@ -42,10 +42,11 @@ char* string_proc_list_concat(string_proc_list* list, uint8_t type, char* hash) 
         return NULL;
     }
 
-    char* result = strdup(hash);
+    char* result = (char*)malloc(strlen(hash) + 1);
 	if (result == NULL) {
 		return NULL;
 	}
+    strcpy(result, hash);
 	string_proc_node* current = list->first;
 	while (current != NULL) {
 		if (current->type == type) {
