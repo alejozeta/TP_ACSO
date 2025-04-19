@@ -20,7 +20,7 @@ void test_create_destroy_list(){
 void test_create_destroy_node(){
 	printf("Creando nodo vacio\n");
 	string_proc_node* node	= string_proc_node_create_asm(0, "hash");
-	printf((node->hash == 'hash' && node->type == 0) ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf((strcmp(node->hash, "hash") == 0 && node->type == 0) ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
 	printf("Destruyendo nodo\n");
 	string_proc_node_destroy(node);
 }
@@ -30,17 +30,22 @@ void test_create_destroy_node(){
 */
 void test_create_list_add_nodes()
 {	
-	string_proc_list * list	= string_proc_list_create_asm();
+	string_proc_list * list = string_proc_list_create_asm();
+
 	string_proc_list_add_node_asm(list, 0, "hola");
-	printf(list->first->hash == "hola" ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf(strcmp(list->first->hash, "hola") == 0 ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+
 	string_proc_list_add_node_asm(list, 0, "a");
-	printf(list->first->next->hash == "a" ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf(strcmp(list->first->next->hash, "a") == 0 ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+
 	string_proc_list_add_node_asm(list, 0, "todos!");
-	printf(list->first->next->next->hash == "todos!" ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
-	printf(list->first->next->next->previous->hash == "a" ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf(strcmp(list->first->next->next->hash, "todos!") == 0 ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+
+	printf(strcmp(list->first->next->next->previous->hash, "a") == 0 ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
 
 	string_proc_list_destroy(list);
 }
+
 
 /**
  * 	crea una lista y le agrega nodos. Luego aplica la lista a un hash.
