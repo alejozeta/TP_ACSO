@@ -56,34 +56,53 @@ string_proc_node_create_asm:
 
 
 string_proc_list_add_node_asm:
-    push    rbx
-    mov     rbx, rdi             ; rbx = list
-
-    mov     edi, esi             ; tomar type desde 2do arg
-    and     edi, 0xFF            ; asegurar unsigned char
-    mov     rsi, rdx             ; rsi = hash
+    push    rbp ;
+    mov     rbp, rsp
+    sub     rsp, 48
+    mov     QWORD PTR [rbp-24], rdi
+    mov     eax, esi
+    mov     QWORD PTR [rbp-40], rdx
+    mov     BYTE PTR [rbp-28], al
+    movzx   eax, BYTE PTR [rbp-28]
+    mov     rdx, QWORD PTR [rbp-40]
+    mov     rsi, rdx
+    mov     edi, eax
     call    string_proc_node_create_asm
-
+    mov     QWORD PTR [rbp-8], rax
+    cmp     QWORD PTR [rbp-8], 0
+    je      .L13
+    mov     rax, QWORD PTR [rbp-24]
+    mov     rax, QWORD PTR [rax]
     test    rax, rax
-    je      .return_list_add
+    jne     .L12
+    mov     rax, QWORD PTR [rbp-24]
+    mov     rdx, QWORD PTR [rbp-8]
+    mov     QWORD PTR [rax], rdx
+    mov     rax, QWORD PTR [rbp-24]
+    mov     rdx, QWORD PTR [rbp-8]
+    mov     QWORD PTR [rax+8], rdx
+    jmp     .L9
 
-    mov     rcx, [rbx]
-    test    rcx, rcx
-    je      .empty_list_add
+.L12:
+        mov     rax, QWORD PTR [rbp-24]
+        mov     rax, QWORD PTR [rax+8]
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     QWORD PTR [rax], rdx
+        mov     rax, QWORD PTR [rbp-24]
+        mov     rdx, QWORD PTR [rax+8]
+        mov     rax, QWORD PTR [rbp-8]
+        mov     QWORD PTR [rax+8], rdx
+        mov     rax, QWORD PTR [rbp-24]
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     QWORD PTR [rax+8], rdx
+        jmp     .L9
 
-    mov     rdx, [rbx + 8]
-    mov     [rdx], rax
-    mov     [rax + 8], rdx
-    mov     [rbx + 8], rax
-    jmp     .return_list_add
-
-.empty_list_add:
-    mov     [rbx], rax
-    mov     [rbx + 8], rax
-
-.return_list_add:
-    pop     rbx
-    ret
+.L13:
+        nop
+        
+.L9:
+        leave
+        ret
 
 
 
