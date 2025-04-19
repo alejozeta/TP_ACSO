@@ -38,78 +38,77 @@ string_proc_list_create_asm:
 
 
 string_proc_node_create_asm:
-    ; ─── Guardar los argumentos antes de que se pisen ────────────────
-    mov     ecx, edi           ; ecx = type   (32 bit, mantendrá el 8‑bit bajo)
-    mov     rdx, rsi           ; rdx = hash   (lo necesitaremos tras malloc)
+    ;string_proc_node* string_proc_node_create(uint8_t type, char* hash) 
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 16                 ; espacio local:
+                                    ;   [rbp‑8]  → hash  (8 B)
+                                    ;   [rbp‑12] → type  (4 B)
+                                    ;              4 B padding
 
-    ; ─── Reservar memoria ────────────────────────────────────────────
-    mov     edi, 32            ; size_t 32  → rdi
-    call    malloc             ; rax = ptr o NULL
+
+    mov     dword [rbp-12], edi     ; type   (byte bajo válido)
+    mov     qword [rbp-8],  rsi     ; hash
+
+    mov     edi, 32                 ; sizeof(string_proc_node) = 32
+    call    malloc                  ; rax = puntero o NULL
 
     test    rax, rax
-    je      .return_null_node_create
+    je      .return_null
 
-    ; ─── Inicializar campos del nodo ─────────────────────────────────
-    and     ecx, 0xFF          ; aseguramos que sólo queden los 8 bits bajos
+    mov     ecx, dword [rbp-12]     ; ecx = type (32 bits)
+    and     ecx, 0xFF               ; nos quedamos con 8 bits
+    mov     rdx, qword [rbp-8]      ; rdx = hash
 
-    mov     qword [rax],      0    ; node->next     = NULL
-    mov     qword [rax + 8],  0    ; node->previous = NULL
-    mov     byte  [rax + 16], cl   ; node->type     = (uint8_t)type
-    mov     qword [rax + 24], rdx  ; node->hash     = hash
+    mov     qword [rax],      0     ; next     = NULL
+    mov     qword [rax + 8],  0     ; previous = NULL
+    mov     byte  [rax + 16], cl    ; type     = (uint8_t)type
+    mov     qword [rax + 24], rdx   ; hash
 
+    leave
     ret
 
-.return_null_node_create:
-    xor     eax, eax               ; rax = NULL
+.return_null:
+    xor     eax, eax                ; rax = NULL
+    leave
     ret
-
 
 string_proc_list_add_node_asm:
-    ; ─── Prólogo ───────────────────────────────────────────────────────
-    push    rbx                ; rbx es callee‑saved, lo vamos a usar
-                                ; para guardar el puntero a la lista
+    ; void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash)
+    push    rbp
+    mov     rbp, rsp
+    push    rbx                     ; rbx es callee‑saved → salvamos
+                                    ; rbx contendrá 'list'
 
-    mov     rbx, rdi           ; rbx = list (lo necesitamos tras la llamada)
+    mov     rbx, rdi                ; rbx = list (primer argumento)
 
-    ; ─── Crear el nuevo nodo ───────────────────────────────────────────
-    ; 1er parámetro (type) → edi
-    ; 2do parámetro (hash) → rsi
-    mov     edi, esi           ; type
-    mov     rsi, rdx           ; hash
+    ; ─── Crear el nuevo nodo ─────────────────────────────────────────
+    mov     edi, esi                ; 1er parámetro (type)  → edi
+    mov     rsi, rdx                ; 2º parámetro (hash)  → rsi
     call    string_proc_node_create_asm
-
-    ; rax = new_node (o NULL si falló malloc)
+                                     ; rax = new_node o NULL
     test    rax, rax
-    je      .fin               ; si malloc falló, salir sin hacer nada
+    je      .fin                    ; si malloc falló → salir
 
-    ; ─── ¿La lista está vacía? ─────────────────────────────────────────
-    cmp     qword [rbx], 0     ; list->first == NULL ?
+    ; ─── ¿Lista vacía? ───────────────────────────────────────────────
+    cmp     qword [rbx], 0          ; list->first == NULL ?
     je      .lista_vacia
 
-    ; ─── Lista NO vacía: encadenar al final ────────────────────────────
-    mov     rcx, [rbx + 8]     ; rcx = list->last (puntero al último nodo)
-
-    ; last->next  = new_node
-    mov     [rcx], rax         ; offset 0 dentro de string_proc_node
-
-    ; new_node->previous = last
-    mov     [rax + 8], rcx     ; offset 8 = previous
-
-    ; list->last = new_node
-    mov     [rbx + 8], rax
-
+    ; ---- Lista NO vacía --------------------------------------------
+    mov     rcx, [rbx + 8]          ; rcx = list->last
+    mov     [rcx], rax              ; last->next        = new_node
+    mov     [rax + 8], rcx          ; new_node->previous = last
+    mov     [rbx + 8], rax          ; list->last        = new_node
     jmp     .fin
 
 .lista_vacia:
-    ; list->first = new_node
-    mov     [rbx],     rax
-    ; list->last  = new_node
-    mov     [rbx + 8], rax
-    ; new_node ya tiene next = NULL y previous = NULL porque
-    ;  lo inicializa string_proc_node_create_asm
+    mov     [rbx],     rax          ; list->first = new_node
+    mov     [rbx + 8], rax          ; list->last  = new_node
+    ; (new_node ya tiene next = previous = NULL)
 
 .fin:
     pop     rbx
+    leave
     ret
 
 
