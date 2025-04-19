@@ -38,27 +38,6 @@ string_proc_list_create_asm:
 string_proc_node_create_asm:
     mov     edi, 32
     call    malloc
-
-    test    rax, rax
-    je      .return_null_node_create
-
-    mov     rdx, rsi
-    movzx   ecx, dil
-
-    mov     qword [rax], 0
-    mov     qword [rax + 8], 0
-    mov     byte [rax + 16], cl
-    mov     qword [rax + 24], rdx
-
-    ret
-
-.return_null_node_create:
-    xor     rax, rax
-    ret
-
-string_proc_node_create_asm:
-    mov     edi, 32
-    call    malloc
     test    rax, rax
     je      .return_null_node_create
 
@@ -75,6 +54,35 @@ string_proc_node_create_asm:
     xor     rax, rax
     ret
 
+
+string_proc_list_add_node_asm:
+    push    rbx
+    mov     rbx, rdi
+
+    movzx   edi, sil
+    mov     rsi, rdx
+    call    string_proc_node_create_asm
+
+    test    rax, rax
+    je      .return_list_add
+
+    mov     rcx, [rbx]
+    test    rcx, rcx
+    je      .empty_list_add
+
+    mov     rdx, [rbx + 8]
+    mov     [rdx], rax
+    mov     [rax + 8], rdx
+    mov     [rbx + 8], rax
+    jmp     .return_list_add
+
+.empty_list_add:
+    mov     [rbx], rax
+    mov     [rbx + 8], rax
+
+.return_list_add:
+    pop     rbx
+    ret
 
 string_proc_list_concat_asm:
     ; rdi = list, sil = type, rdx = hash
