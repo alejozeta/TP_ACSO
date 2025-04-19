@@ -28,8 +28,6 @@ string_proc_list_create_asm:
 
     mov     qword [rax], 0
     mov     qword [rax + 8], 0
-
-.return_list_create:
     ret
 
 .return_null_list_create:
@@ -87,6 +85,7 @@ string_proc_list_add_node_asm:
     ret
 
 string_proc_list_concat_asm:
+    ; rdi = list, sil = type, rdx = hash
     push    rbx
     push    r12
     push    r13
@@ -96,40 +95,50 @@ string_proc_list_concat_asm:
     test    rdi, rdi
     je      .return_null_concat
 
-    mov     rbx, rdi
-    mov     r12, rdx
-    mov     r13b, sil
-    mov     r14, [rbx]
+    mov     rbx, rdi            ; rbx = list
+    mov     r12, rdx            ; r12 = hash
+    mov     r13b, sil           ; r13b = type
+
+    mov     r14, [rbx]          ; r14 = list->first
     test    r14, r14
     je      .return_null_concat
 
+    ; malloc(strlen(hash) + 1)
     mov     rdi, r12
-    call    strdup
+    call    strlen
+    inc     rax
+    mov     rdi, rax
+    call    malloc
     test    rax, rax
     je      .return_null_concat
 
-    mov     r15, rax
-    mov     r14, [rbx]
+    mov     r15, rax            ; r15 = result
+    mov     rdi, r15
+    mov     rsi, r12
+    call    strcpy              ; strcpy(result, hash)
 
 .loop_concat:
     test    r14, r14
     je      .done_concat
 
+    ; if (current->type == type)
     movzx   eax, byte [r14 + 16]
     cmp     al, r13b
     jne     .skip_concat
 
+    ; result = str_concat(result, current->hash)
     mov     rdi, r15
     mov     rsi, [r14 + 24]
     call    str_concat
 
+    ; free(result)
     mov     rdi, r15
     call    free
 
-    mov     r15, rax
+    mov     r15, rax            ; result = temp
 
 .skip_concat:
-    mov     r14, [r14]
+    mov     r14, [r14]          ; current = current->next
     jmp     .loop_concat
 
 .done_concat:
