@@ -36,17 +36,30 @@ string_proc_list_create_asm:
     ret
 
 string_proc_node_create_asm:
+    ; Reservar memoria para el nodo (tamaño: 32 bytes)
     mov     edi, 32
     call    malloc
+
+    ; Verificar si malloc devolvió NULL
     test    rax, rax
     je      .return_null_node_create
 
-    mov     rdx, rsi             ; hash backup
-    movzx   ecx, dil             ; type en cl
-    mov     qword [rax], 0       ; next = NULL
-    mov     qword [rax + 8], 0   ; previous = NULL
-    mov     byte [rax + 16], cl  ; type = cl
-    mov     qword [rax + 24], rdx; hash = rdx
+    ; Argumentos:
+    ;  - tipo: llega en dil (byte bajo de rdi)
+    ;  - hash: llega en rsi
+    ; rax = puntero al nuevo nodo
+
+    ; Guardar rsi (hash) en rdx
+    mov     rdx, rsi
+
+    ; Extraer y copiar type (dil) → cl
+    movzx   ecx, dil              ; extiende a 32 bits y lo pone en ecx
+
+    ; Inicializar los campos del nodo
+    mov     qword [rax], 0        ; node->next = NULL
+    mov     qword [rax + 8], 0    ; node->previous = NULL
+    mov     byte [rax + 16], cl   ; node->type = cl (copiamos solo el byte)
+    mov     qword [rax + 24], rdx ; node->hash = hash
 
     ret
 
