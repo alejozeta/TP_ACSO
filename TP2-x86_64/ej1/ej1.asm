@@ -25,12 +25,12 @@ string_proc_list_create_asm:
     mov  rbp, rsp
 
     mov  edi, 16          ; sizeof(string_proc_list)
-    call malloc           ; rax ← bloque de 16 B
-    test rax, rax
+    call malloc           
+    test rax, rax         ; si falla salta a error(fallo malloc)  
     je   .err
 
-    mov qword [rax],    0 ; first = NULL
-    mov qword [rax+8],  0 ; last  = NULL
+    mov qword [rax],    0 ; los seteo a null
+    mov qword [rax+8],  0 
     leave
     ret
 .err:
@@ -43,24 +43,20 @@ string_proc_list_create_asm:
 string_proc_node_create_asm:
     ;string_proc_node* string_proc_node_create(uint8_t type, char* hash) 
     push    rbp
-    mov     rbp, rsp
-    sub     rsp, 16                 ; espacio local:
-                                    ;   [rbp‑8]  → hash  (8 B)
-                                    ;   [rbp‑12] → type  (4 B)
-                                    ;              4 B padding
-
+    mov     rbp, rsp                
+    sub     rsp, 16                 ; hash + type = 12B + 4B padding  
 
     mov     dword [rbp-12], edi     ; type   (byte bajo válido)
     mov     qword [rbp-8],  rsi     ; hash
 
-    mov     edi, 32                 ; sizeof(string_proc_node) = 32
-    call    malloc                  ; rax = puntero o NULL
+    mov     edi, 32                 ; sizeof(string_proc_node) = 32 
+    call    malloc                  ;
 
     test    rax, rax
-    je      .return_null
+    je      .return_null            ; si falla malloc
 
-    mov     ecx, dword [rbp-12]     ; ecx = type (32 bits)
-    and     ecx, 0xFF               ; nos quedamos con 8 bits
+    mov     ecx, dword [rbp-12]     ; 
+    and     ecx, 0xFF               ; nos quedamos con 8 bits del ecx
     mov     rdx, qword [rbp-8]      ; rdx = hash
 
     mov     qword [rax],      0     ; next     = NULL
@@ -80,24 +76,19 @@ string_proc_list_add_node_asm:
     ; void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash)
     push    rbp
     mov     rbp, rsp
-    push    rbx                     ; rbx es callee‑saved → salvamos
-                                    ; rbx contendrá 'list'
+    push    rbx                     
 
-    mov     rbx, rdi                ; rbx = list (primer argumento)
+    mov     rbx, rdi                ; rbx = list 
 
-    ; ─── Crear el nuevo nodo ─────────────────────────────────────────
-    mov     edi, esi                ; 1er parámetro (type)  → edi
-    mov     rsi, rdx                ; 2º parámetro (hash)  → rsi
+    mov     edi, esi                ; edi = type
+    mov     rsi, rdx                ; rsi = hash
     call    string_proc_node_create_asm
-                                     ; rax = new_node o NULL
     test    rax, rax
-    je      .fin                    ; si malloc falló → salir
+    je      .fin                    ; si falla malloc termino
 
-    ; ─── ¿Lista vacía? ───────────────────────────────────────────────
-    cmp     qword [rbx], 0          ; list->first == NULL ?
+    cmp     qword [rbx], 0          ; esta vacia la lista?
     je      .lista_vacia
 
-    ; ---- Lista NO vacía --------------------------------------------
     mov     rcx, [rbx + 8]          ; rcx = list->last
     mov     [rcx], rax              ; last->next        = new_node
     mov     [rax + 8], rcx          ; new_node->previous = last
@@ -107,7 +98,6 @@ string_proc_list_add_node_asm:
 .lista_vacia:
     mov     [rbx],     rax          ; list->first = new_node
     mov     [rbx + 8], rax          ; list->last  = new_node
-    ; (new_node ya tiene next = previous = NULL)
 
 .fin:
     pop     rbx
@@ -116,7 +106,6 @@ string_proc_list_add_node_asm:
 
 
 string_proc_list_concat_asm:
-    ; ─── prólogo ──────────────────────────────────────────────
     push    rbp
     mov     rbp, rsp
     push    rbx
@@ -127,7 +116,7 @@ string_proc_list_concat_asm:
 
     mov     rbx, rdi           ; list
     mov     r13d, esi          ; type (byte bajo = r13b)
-    mov     r15, rdx           ; *** guarda hash aquí *** (se necesita tras strlen)
+    mov     r15, rdx           
 
     ; if (list == NULL || list->first == NULL) return NULL
     test    rbx, rbx
@@ -137,33 +126,32 @@ string_proc_list_concat_asm:
     je      .ret_null
 
     ; result = malloc(strlen(hash)+1)
-    mov     rdi, r15           ; hash
+    mov     rdi, r15            ; hash
     call    strlen
     inc     rax
     mov     rdi, rax
     call    malloc
     test    rax, rax
-    je      .ret_null
-    mov     r14, rax           ; result
+    je      .ret_null           ; si falla malloc salto
+    mov     r14, rax            ; result
 
     ; strcpy(result, hash)
-    mov     rdi, r14           ; dest
+    mov     rdi, r14           
     mov     rsi, r15           ; src  (hash guardado)
     call    strcpy
 
-    ; ---- bucle principal ------------------------------------
-.loop:
+
+.loop: ;looooooops
     test    r12, r12
     je      .done
 
     cmp     byte [r12 + 16], r13b    ; current->type == type ?
     jne     .next
 
-    ; temp = str_concat(result, current->hash)
     mov     rdi, r14
     mov     rsi, [r12 + 24]
-    call    str_concat               ; rax = temp
-    mov     r15, rax                 ; salvar temp
+    call    str_concat
+    mov     r15, rax
 
     mov     rdi, r14                 ; free(result)
     call    free
@@ -176,8 +164,6 @@ string_proc_list_concat_asm:
 
 .done:
     mov     rax, r14                 ; return result
-
-    ; ─── epílogo ──────────────────────────────────────────────
     pop     r15
     pop     r14
     pop     r13
