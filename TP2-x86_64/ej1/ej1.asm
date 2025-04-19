@@ -21,18 +21,21 @@ extern strcpy
 extern printf
 
 string_proc_list_create_asm:
-    mov     edi, 16
-    call    malloc
+    push rbp
+    mov  rbp, rsp
 
-    test    rax, rax
-    je      .return_null_list_create
+    mov  edi, 16          ; sizeof(string_proc_list)
+    call malloc           ; rax ← bloque de 16 B
+    test rax, rax
+    je   .err
 
-    mov     qword [rax], 0
-    mov     qword [rax + 8], 0
+    mov qword [rax],    0 ; first = NULL
+    mov qword [rax+8],  0 ; last  = NULL
+    leave
     ret
-
-.return_null_list_create:
-    xor     rax, rax
+.err:
+    xor eax, eax
+    leave
     ret
 
 
