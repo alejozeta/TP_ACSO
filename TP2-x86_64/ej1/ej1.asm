@@ -56,34 +56,50 @@ string_proc_node_create_asm:
     xor     rax, rax
     ret
 
+global string_proc_list_add_node_asm
+extern string_proc_node_create_asm
+
 string_proc_list_add_node_asm:
     push    rbx
-    mov     rbx, rdi
+    mov     rbx, rdi                ; rbx = list
 
-    movzx   edi, sil
-    mov     rsi, rdx
+    ; defensa: si list == NULL → salir
+    test    rbx, rbx
+    je      .return_list_add
+
+    ; preparar argumentos para string_proc_node_create_asm(type, hash)
+    movzx   edi, sil                ; type → edi (uint8_t)
+    mov     rsi, rdx                ; hash → rsi
     call    string_proc_node_create_asm
 
+    ; si new_node == NULL → salir
     test    rax, rax
     je      .return_list_add
 
-    mov     rcx, [rbx]
+    ; rax = new_node
+    ; rbx = list
+
+    ; verificar si list->first == NULL
+    mov     rcx, [rbx]              ; rcx = list->first
     test    rcx, rcx
     je      .empty_list_add
 
-    mov     rdx, [rbx + 8]
-    mov     [rdx], rax
-    mov     [rax + 8], rdx
-    mov     [rbx + 8], rax
+    ; lista no vacía:
+    mov     rdx, [rbx + 8]          ; rdx = list->last
+    mov     [rdx], rax              ; last->next = new_node
+    mov     [rax + 8], rdx          ; new_node->previous = last
+    mov     [rbx + 8], rax          ; list->last = new_node
     jmp     .return_list_add
 
 .empty_list_add:
-    mov     [rbx], rax
-    mov     [rbx + 8], rax
+    ; lista vacía: first = last = new_node
+    mov     [rbx], rax              ; list->first = new_node
+    mov     [rbx + 8], rax          ; list->last = new_node
 
 .return_list_add:
     pop     rbx
     ret
+
 
 string_proc_list_concat_asm:
     ; rdi = list, sil = type, rdx = hash
