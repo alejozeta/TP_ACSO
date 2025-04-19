@@ -56,53 +56,58 @@ string_proc_node_create_asm:
 
 
 string_proc_list_add_node_asm:
-    push    rbp ;
+    push    rbp
     mov     rbp, rsp
     sub     rsp, 48
-    mov     QWORD PTR [rbp-24], rdi
-    mov     eax, esi
-    mov     QWORD PTR [rbp-40], rdx
-    mov     BYTE PTR [rbp-28], al
-    movzx   eax, BYTE PTR [rbp-28]
-    mov     rdx, QWORD PTR [rbp-40]
+
+    mov     [rbp-24], rdi      ; list
+    mov     eax, esi           ; type (int → eax)
+    mov     [rbp-40], rdx      ; hash
+    mov     [rbp-28], al       ; guarda solo el byte bajo (type)
+
+    movzx   eax, byte [rbp-28] ; eax = type & 0xFF
+    mov     rdx, [rbp-40]      ; rdx = hash
     mov     rsi, rdx
-    mov     edi, eax
+    mov     edi, eax           ; edi = type
     call    string_proc_node_create_asm
-    mov     QWORD PTR [rbp-8], rax
-    cmp     QWORD PTR [rbp-8], 0
+
+    mov     [rbp-8], rax
+    cmp     qword [rbp-8], 0
     je      .L13
-    mov     rax, QWORD PTR [rbp-24]
-    mov     rax, QWORD PTR [rax]
+
+    mov     rax, [rbp-24]
+    mov     rax, [rax]
     test    rax, rax
     jne     .L12
-    mov     rax, QWORD PTR [rbp-24]
-    mov     rdx, QWORD PTR [rbp-8]
-    mov     QWORD PTR [rax], rdx
-    mov     rax, QWORD PTR [rbp-24]
-    mov     rdx, QWORD PTR [rbp-8]
-    mov     QWORD PTR [rax+8], rdx
+
+    mov     rax, [rbp-24]
+    mov     rdx, [rbp-8]
+    mov     [rax], rdx
+    mov     rax, [rbp-24]
+    mov     rdx, [rbp-8]
+    mov     [rax+8], rdx
     jmp     .L9
 
 .L12:
-        mov     rax, QWORD PTR [rbp-24]
-        mov     rax, QWORD PTR [rax+8]
-        mov     rdx, QWORD PTR [rbp-8]
-        mov     QWORD PTR [rax], rdx
-        mov     rax, QWORD PTR [rbp-24]
-        mov     rdx, QWORD PTR [rax+8]
-        mov     rax, QWORD PTR [rbp-8]
-        mov     QWORD PTR [rax+8], rdx
-        mov     rax, QWORD PTR [rbp-24]
-        mov     rdx, QWORD PTR [rbp-8]
-        mov     QWORD PTR [rax+8], rdx
-        jmp     .L9
+    mov     rax, [rbp-24]
+    mov     rax, [rax+8]
+    mov     rdx, [rbp-8]
+    mov     [rax], rdx
+    mov     rax, [rbp-24]
+    mov     rdx, [rax+8]
+    mov     rax, [rbp-8]
+    mov     [rax+8], rdx
+    mov     rax, [rbp-24]
+    mov     rdx, [rbp-8]
+    mov     [rax+8], rdx
+    jmp     .L9
 
 .L13:
-        nop
-        
+    nop
+
 .L9:
-        leave
-        ret
+    leave
+    ret
 
 
 
