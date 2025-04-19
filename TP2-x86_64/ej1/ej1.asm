@@ -18,7 +18,7 @@ extern free
 extern str_concat
 extern strlen
 extern strcpy
-
+extern printf
 
 string_proc_list_create_asm:
     mov     edi, 16
@@ -35,6 +35,8 @@ string_proc_list_create_asm:
     xor     rax, rax
     ret
 
+
+
 string_proc_node_create_asm:
     ; Reservar memoria para el nodo (tamaño: 32 bytes)
     mov     edi, 32
@@ -45,20 +47,25 @@ string_proc_node_create_asm:
     je      .return_null_node_create
 
     ; Argumentos:
-    ;  - tipo: llega en dil (byte bajo de rdi)
+    ;  - tipo: llega en dil
     ;  - hash: llega en rsi
     ; rax = puntero al nuevo nodo
 
-    ; Guardar rsi (hash) en rdx
+    ; Guardar rsi (hash) en rdx (por si se pisa luego)
     mov     rdx, rsi
 
-    ; Extraer y copiar type (dil) → cl
-    movzx   ecx, dil              ; extiende a 32 bits y lo pone en ecx
+    ; Extraer el byte bajo (dil) y extenderlo a 32 bits en ecx
+    movzx   ecx, dil             ; ecx ← (uint8_t) type
+    
+    mov     edi, fmt_type
+    mov     esi, ecx
+    xor     eax, eax
+    call    printf
 
-    ; Inicializar los campos del nodo
+    ; Inicializar campos del nodo
     mov     qword [rax], 0        ; node->next = NULL
     mov     qword [rax + 8], 0    ; node->previous = NULL
-    mov     byte [rax + 16], cl   ; node->type = cl (copiamos solo el byte)
+    mov     byte  [rax + 16], cl  ; node->type = cl
     mov     qword [rax + 24], rdx ; node->hash = hash
 
     ret
