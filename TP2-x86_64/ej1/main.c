@@ -65,9 +65,13 @@ void test_list_concat()
 {
 	string_proc_list * list	= string_proc_list_create();
 	string_proc_list_add_node(list, 0, "hola");
+
 	string_proc_list_add_node(list, 0, "a");
+
 	string_proc_list_add_node(list, 0, "todos!");	
 	char* new_hash = string_proc_list_concat(list, 0, "hash");
+
+	printf(strcmp(new_hash, "hashholaatodos!") == 0 ? "Hash creado correctamente\n" : "Error al crear el hash\n");
 	string_proc_list_destroy(list);
 	free(new_hash);
 }
