@@ -43,22 +43,21 @@ string_proc_node_create_asm:
     test    rax, rax
     je      .return_null_node_create
 
-    mov     rdx, rsi              ; hash backup
+    mov     rdx, rsi              ; rdx = hash (segundo argumento)
+    mov     ecx, edi              ; ecx = int type
+    and     ecx, 0xFF             ; quedarse solo con 8 bits (uint8_t)
+    mov     byte [rax + 16], cl   ; guardar type en el nodo
 
-    ; ESTA ES LA PARTE IMPORTANTE
-    mov     ecx, edi              ; tomar 'type' como int
-    and     ecx, 0xFF             ; asegurar uint8_t
-    mov     byte [rax + 16], cl   ; guardar solo el byte
-
-    mov     qword [rax], 0
-    mov     qword [rax + 8], 0
-    mov     qword [rax + 24], rdx
+    mov     qword [rax], 0        ; next
+    mov     qword [rax + 8], 0    ; previous
+    mov     qword [rax + 24], rdx ; hash
 
     ret
 
 .return_null_node_create:
     xor     rax, rax
     ret
+
 
 
 
