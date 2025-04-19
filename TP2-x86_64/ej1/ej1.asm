@@ -47,21 +47,21 @@ string_proc_node_create_asm:
     je      .return_null_node_create
 
     ; Argumentos:
-    ;  - tipo: llega en dil
-    ;  - hash: llega en rsi
-    ; rax = puntero al nuevo nodo
+    ;  - type: viene en edi (int) → vamos a tomar solo los 8 bits bajos
+    ;  - hash: en rsi
 
-    ; Guardar rsi (hash) en rdx (por si se pisa luego)
+    ; Guardar hash en rdx (por si se pisa)
     mov     rdx, rsi
 
-    ; Extraer el byte bajo (dil) y extenderlo a 32 bits en ecx
-    movzx   ecx, dil             ; ecx ← (uint8_t) type
-    
-    ; Inicializar campos del nodo
+    ; Tomar los 8 bits bajos de edi (type)
+    mov     ecx, edi
+    and     ecx, 0xFF             ; asegurar solo 8 bits
+
+    ; Inicializar campos
     mov     qword [rax], 0        ; node->next = NULL
     mov     qword [rax + 8], 0    ; node->previous = NULL
-    mov     byte  [rax + 16], cl  ; node->type = cl
-    mov     qword [rax + 24], rdx ; node->hash = hash
+    mov     byte  [rax + 16], cl  ; node->type = (uint8_t)type
+    mov     qword [rax + 24], rdx ; node->hash
 
     ret
 
