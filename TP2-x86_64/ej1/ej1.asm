@@ -38,35 +38,29 @@ string_proc_list_create_asm:
 
 
 string_proc_node_create_asm:
-    ; Reservar memoria para el nodo (tamaño: 32 bytes)
-    mov     edi, 32
-    call    malloc
+    ; ─── Guardar los argumentos antes de que se pisen ────────────────
+    mov     ecx, edi           ; ecx = type   (32 bit, mantendrá el 8‑bit bajo)
+    mov     rdx, rsi           ; rdx = hash   (lo necesitaremos tras malloc)
 
-    ; Verificar si malloc devolvió NULL
+    ; ─── Reservar memoria ────────────────────────────────────────────
+    mov     edi, 32            ; size_t 32  → rdi
+    call    malloc             ; rax = ptr o NULL
+
     test    rax, rax
     je      .return_null_node_create
 
-    ; Argumentos:
-    ;  - type: viene en edi (int) → vamos a tomar solo los 8 bits bajos
-    ;  - hash: en rsi
+    ; ─── Inicializar campos del nodo ─────────────────────────────────
+    and     ecx, 0xFF          ; aseguramos que sólo queden los 8 bits bajos
 
-    ; Guardar hash en rdx (por si se pisa)
-    mov     rdx, rsi
-
-    ; Tomar los 8 bits bajos de edi (type)
-    mov     ecx, edi
-    and     ecx, 0xFF             ; asegurar solo 8 bits
-
-    ; Inicializar campos
-    mov     qword [rax], 0        ; node->next = NULL
-    mov     qword [rax + 8], 0    ; node->previous = NULL
-    mov     byte  [rax + 16], cl  ; node->type = (uint8_t)type
-    mov     qword [rax + 24], rdx ; node->hash
+    mov     qword [rax],      0    ; node->next     = NULL
+    mov     qword [rax + 8],  0    ; node->previous = NULL
+    mov     byte  [rax + 16], cl   ; node->type     = (uint8_t)type
+    mov     qword [rax + 24], rdx  ; node->hash     = hash
 
     ret
 
 .return_null_node_create:
-    xor     rax, rax
+    xor     eax, eax               ; rax = NULL
     ret
 
 
