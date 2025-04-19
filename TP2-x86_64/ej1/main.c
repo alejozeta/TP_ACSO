@@ -18,12 +18,18 @@ void test_create_destroy_list(){
 *	crea y destruye un nodo
 */
 void test_create_destroy_node(){
-	printf("Creando nodo vacio\n");
-	string_proc_node* node	= string_proc_node_create_asm(0, "hash");
-	printf(node->hash );
-	printf(node->type);
-	printf(node->next == NULL ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
-	printf(node->previous == NULL ? "Nodo creado correctamente\n" : "Error al crear el nodo\n");
+	printf("Creando nodo vacío\n");
+
+	string_proc_node* node = string_proc_node_create_asm(0, "hash");
+
+	// Mostrar contenido del nodo
+	printf("Hash: %s\n", node->hash);
+	printf("Type: %d\n", node->type);
+
+	// Verificar punteros
+	printf(node->next == NULL ? "Next NULL correctamente\n" : "Error: next no es NULL\n");
+	printf(node->previous == NULL ? "Previous NULL correctamente\n" : "Error: previous no es NULL\n");
+
 	printf("Destruyendo nodo\n");
 	string_proc_node_destroy(node);
 }
