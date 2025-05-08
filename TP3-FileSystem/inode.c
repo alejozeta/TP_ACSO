@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "inode.h"
 #include "diskimg.h"
-
+#include "string.h"
 #define INODE_SIZE 32
 #define BLOCK_SIZE 512
 #define INODE_PER_BLOCK (BLOCK_SIZE / INODE_SIZE)
