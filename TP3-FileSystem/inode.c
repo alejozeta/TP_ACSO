@@ -22,22 +22,23 @@
 // sector number = inode number / 16
 // inode position = inode number % 16
 int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
-    if (inumber <= 0) {
-        return -1; // Invalid inode number (must be >= 1)
+    if (inumber < 1) {
+        return -1;  // inodos empiezan desde 1
     }
 
-    int zero_based = inumber - 1;
-    int sectorNum = INODE_START_SECTOR + (zero_based / INODE_PER_BLOCK);
-    int index = zero_based % INODE_PER_BLOCK;
+    // Cálculo de bloque y posición dentro del bloque
+    int inodes_per_sector = DISKIMG_SECTOR_SIZE / sizeof(struct inode);
+    int block_num = INODE_START_SECTOR + (inumber - 1) / inodes_per_sector;
+    int index_in_block = (inumber - 1) % inodes_per_sector;
 
-    char buf[BLOCK_SIZE];
-    if (diskimg_readsector(fs->dfd, sectorNum, buf) != BLOCK_SIZE) {
+    // Leer el sector que contiene el inodo
+    struct inode inodes[inodes_per_sector];
+    if (diskimg_readsector(fs->dfd, block_num, inodes) != DISKIMG_SECTOR_SIZE) {
         return -1;
     }
 
-    struct inode *inodes = (struct inode *) buf;
-    *inp = inodes[index];  // Copiamos toda la estructura de una sola vez
-
+    // Copiar el inodo deseado al buffer de salida
+    *inp = inodes[index_in_block];
     return 0;
 }
 
