@@ -18,7 +18,20 @@
 // cada posicion del i nodo va a ir a una tabla. 
 // consigo 256 entradas mas .
 int file_getblock(struct unixfilesystem *fs, int inumber, int blockNum, void *buf) {
-    
-    return 0;
+    struct inode in;
+    if (inode_iget(fs, inumber, &in) < 0) {
+        return -1; // Error reading inode
+    }
+
+    int blockAddress = inode_indexlookup(fs, &in, blockNum);
+    if (blockAddress < 0) {
+        return -1; // Error finding block
+    }
+
+    if (diskimg_readsector(fs->dfd, blockAddress, buf) < 0) {
+        return -1; // Error reading block
+    }
+
+    return DISKIMG_SECTOR_SIZE; // Successfully read block
 }
 
