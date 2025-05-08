@@ -28,16 +28,19 @@ int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
 
     int zero_based = inumber - 1;
     int sectorNum = INODE_START_SECTOR + (zero_based / INODE_PER_BLOCK);
-    int offset = (zero_based % INODE_PER_BLOCK) * INODE_SIZE;
+    int index = zero_based % INODE_PER_BLOCK;
 
     char buf[BLOCK_SIZE];
     if (diskimg_readsector(fs->dfd, sectorNum, buf) != BLOCK_SIZE) {
         return -1;
     }
 
-    memcpy(inp, buf + offset, INODE_SIZE);
-    return 0; 
+    struct inode *inodes = (struct inode *) buf;
+    *inp = inodes[index];  // Copiamos toda la estructura de una sola vez
+
+    return 0;
 }
+
 
 
 /**
