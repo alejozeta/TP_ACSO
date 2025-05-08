@@ -22,26 +22,23 @@
 // sector number = inode number / 16
 // inode position = inode number % 16
 int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
-    //Implement Code Here
-    // levanto inode inumber y lo guardo en inp
-    // 1. Check if the inumber is valid
-    if (inumber < 0) {
-        return -1; // Invalid inode number
+    if (inumber <= 0) {
+        return -1; // Invalid inode number (must be >= 1)
     }
-    // 2. Calculate the sector number and offset
 
-    int sectorNum = INODE_START_SECTOR + (inumber / INODE_PER_BLOCK);
-    int offset = (inumber % INODE_PER_BLOCK) * INODE_SIZE;
+    int zero_based = inumber - 1;
+    int sectorNum = INODE_START_SECTOR + (zero_based / INODE_PER_BLOCK);
+    int offset = (zero_based % INODE_PER_BLOCK) * INODE_SIZE;
 
-    // levanto inodo
     char buf[BLOCK_SIZE];
     if (diskimg_readsector(fs->dfd, sectorNum, buf) != BLOCK_SIZE) {
-        return -1; // Error reading the sector
+        return -1;
     }
-    // 3. Copy the inode data from the buffer to inp
+
     memcpy(inp, buf + offset, INODE_SIZE);
     return 0; 
 }
+
 
 /**
  * TODO
