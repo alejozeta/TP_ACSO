@@ -48,58 +48,69 @@ int inode_iget(struct unixfilesystem *fs, int inumber, struct inode *inp) {
  * TODO
  */
 int inode_indexlookup(struct unixfilesystem *fs, struct inode *inp, int blockNum) {
-    if (inp == NULL || blockNum < 0) {
+    if (inp == NULL || !(inp->i_mode & IALLOC) || blockNum < 0) {
         return -1;
     }
 
-    int filesize = inode_getsize(inp);
-    int maxBlocks = (filesize + DISKIMG_SECTOR_SIZE - 1) / DISKIMG_SECTOR_SIZE;
-    if (blockNum >= maxBlocks) {
-        return -1;
-    }
+    int ptrs_per_block = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
 
-    // Caso 1: archivo chico (sin ILARG): usar i_addr[blockNum]
-    if ((inp->i_mode & ILARG) == 0) {
+    // Archivos pequeños (no ILARG): acceso directo
+    if (!(inp->i_mode & ILARG)) {
         if (blockNum >= 8) return -1;
-        return inp->i_addr[blockNum];
+        int block = inp->i_addr[blockNum];
+        return (block != 0) ? block : -1;
     }
 
-    // Caso 2: archivo grande (ILARG activado)
-    if (blockNum < 7 * 256) {
-        int which = blockNum / 256;
-        int offset = blockNum % 256;
+    // Archivos grandes (ILARG): acceso indirecto simple o doble
+    int simple_limit = 7 * ptrs_per_block;
 
-        uint16_t indir = inp->i_addr[which];
-        if (!indir) return -1;
+    if (blockNum < simple_limit) {
+        // Indirección simple: punteros en i_addr[0..6]
+        int indir_block_index  = blockNum / ptrs_per_block;
+        int indir_block_offset = blockNum % ptrs_per_block;
 
-        uint16_t table[256];
-        if (diskimg_readsector(fs->dfd, indir, table) != DISKIMG_SECTOR_SIZE)
+        if (indir_block_index >= 7) return -1;
+
+        int indir_block_num = inp->i_addr[indir_block_index];
+        if (indir_block_num == 0) return -1;
+
+        uint16_t ptrs[ptrs_per_block];
+        if (diskimg_readsector(fs->dfd, indir_block_num, ptrs) != DISKIMG_SECTOR_SIZE) {
             return -1;
+        }
 
-        return table[offset];
+        int data_block_num = ptrs[indir_block_offset];
+        return (data_block_num != 0) ? data_block_num : -1;
     }
 
-    // Caso 3: doble indirecto
-    blockNum -= 7 * 256;
+    // Indirección doble: i_addr[7]
+    blockNum -= simple_limit;
 
-    uint16_t dbl = inp->i_addr[7];
-    if (!dbl) return -1;
+    int double_indir_block = inp->i_addr[7];
+    if (double_indir_block == 0) return -1;
 
-    uint16_t lvl1[256];
-    if (diskimg_readsector(fs->dfd, dbl, lvl1) != DISKIMG_SECTOR_SIZE)
+    uint16_t first_level[ptrs_per_block];
+    if (diskimg_readsector(fs->dfd, double_indir_block, first_level) != DISKIMG_SECTOR_SIZE) {
         return -1;
+    }
 
-    int i1 = blockNum / 256;
-    int i2 = blockNum % 256;
+    int first_index  = blockNum / ptrs_per_block;
+    int second_index = blockNum % ptrs_per_block;
 
-    if (!lvl1[i1]) return -1;
+    if (first_index >= ptrs_per_block) return -1;
 
-    uint16_t lvl2[256];
-    if (diskimg_readsector(fs->dfd, lvl1[i1], lvl2) != DISKIMG_SECTOR_SIZE)
+    int second_indir_block = first_level[first_index];
+    if (second_indir_block == 0) return -1;
+
+    uint16_t second_level[ptrs_per_block];
+    if (diskimg_readsector(fs->dfd, second_indir_block, second_level) != DISKIMG_SECTOR_SIZE) {
         return -1;
+    }
 
-    return lvl2[i2];
+    int data_block_num = second_level[second_index];
+    return (data_block_num != 0) ? data_block_num : -1;
 }
+
 
 int inode_getsize(struct inode *inp) {
   return ((inp->i_size0 << 16) | inp->i_size1); 

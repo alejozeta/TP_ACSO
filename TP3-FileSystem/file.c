@@ -19,19 +19,32 @@
 // consigo 256 entradas mas .
 int file_getblock(struct unixfilesystem *fs, int inumber, int blockNum, void *buf) {
     struct inode in;
+
     if (inode_iget(fs, inumber, &in) < 0) {
-        return -1; // Error reading inode
+        return -1;
     }
 
-    int blockAddress = inode_indexlookup(fs, &in, blockNum);
-    if (blockAddress < 0) {
-        return -1; // Error finding block
+    int diskBlock = inode_indexlookup(fs, &in, blockNum);
+    if (diskBlock < 0) {
+        return -1;
     }
 
-    if (diskimg_readsector(fs->dfd, blockAddress, buf) < 0) {
-        return -1; // Error reading block
+    if (diskimg_readsector(fs->dfd, diskBlock, buf) != DISKIMG_SECTOR_SIZE) {
+        return -1;
     }
 
-    return DISKIMG_SECTOR_SIZE; // Successfully read block
+    int filesize = inode_getsize(&in);
+    int block_offset = blockNum * DISKIMG_SECTOR_SIZE;
+
+    if (block_offset >= filesize) {
+        return 0;
+    }
+
+    int valid_bytes = filesize - block_offset;
+    if (valid_bytes > DISKIMG_SECTOR_SIZE) {
+        valid_bytes = DISKIMG_SECTOR_SIZE;
+    }
+
+    return valid_bytes;
 }
 
