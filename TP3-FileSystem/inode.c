@@ -54,14 +54,13 @@ int inode_indexlookup(struct unixfilesystem *fs, struct inode *inp, int blockNum
 
     int ptrs_per_block = DISKIMG_SECTOR_SIZE / sizeof(uint16_t);
 
-    // Archivos pequeños (no ILARG): acceso directo
     if (!(inp->i_mode & ILARG)) {
         if (blockNum >= 8) return -1;
         int block = inp->i_addr[blockNum];
         return (block != 0) ? block : -1;
     }
 
-    // Archivos grandes (ILARG): acceso indirecto simple o doble
+    // Archivos grandes : acceso indirecto simple o doble
     int simple_limit = 7 * ptrs_per_block;
 
     if (blockNum < simple_limit) {
