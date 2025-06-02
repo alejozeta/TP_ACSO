@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/wait.h>
 
 #define MAX_COMMANDS 200
 #define MAX_ARGS 100
 
 // Parsea un string en args[], sin malloc, respetando comillas
-void parse_args(char *input, char **args) {
+int parse_args(char *input, char **args) {
     int i = 0;
     while (*input) {
         while (*input == ' ' || *input == '\t') input++;
@@ -19,15 +19,47 @@ void parse_args(char *input, char **args) {
             char quote = *input++;
             start = input;
             while (*input && *input != quote) input++;
+            if (*input != quote) {
+                fprintf(stderr, "Error: comilla sin cerrar\n");
+                return -1;
+            }
         } else {
             start = input;
             while (*input && *input != ' ' && *input != '\t') input++;
         }
 
-        if (*input) *input++ = '\0'; // termina string y avanza
+        if (*input) *input++ = '\0';
         args[i++] = start;
+
+        if (i >= MAX_ARGS - 1) {
+            fprintf(stderr, "Error: demasiados argumentos\n");
+            return -1;
+        }
     }
     args[i] = NULL;
+    return 0;
+}
+
+// Verifica errores de sintaxis (pipes mal ubicados o múltiples consecutivos)
+int check_syntax(const char *input) {
+    int len = strlen(input);
+    int only_pipes = 1;
+    int last_was_pipe = 0;
+    int count = 0;
+
+    for (int i = 0; i < len; i++) {
+        if (input[i] == '|') {
+            if (last_was_pipe) return -1; // Pipes dobles o más
+            last_was_pipe = 1;
+            count++;
+        } else if (input[i] != ' ' && input[i] != '\t') {
+            only_pipes = 0;
+            last_was_pipe = 0;
+        }
+    }
+
+    if (only_pipes || input[0] == '|' || input[len - 1] == '|') return -1;
+    return 0;
 }
 
 int main() {
@@ -43,6 +75,10 @@ int main() {
         command[strcspn(command, "\n")] = '\0';
 
         if (strcmp(command, "exit") == 0) break;
+        if (check_syntax(command) != 0) {
+            fprintf(stderr, "Error: comando vacío\n");
+            continue;
+        }
 
         char *commands[MAX_COMMANDS];
         int count = 0;
@@ -84,8 +120,8 @@ int main() {
                 }
 
                 char *args[MAX_ARGS];
-                parse_args(commands[i], args);
-
+                if (parse_args(commands[i], args) != 0)
+                    exit(1);
                 if (args[0] == NULL) {
                     fprintf(stderr, "Error: comando vacío\n");
                     exit(1);
