@@ -11,11 +11,11 @@
 int parse_args(char *input, char **args) {
     int i = 0;
     while (*input) {
-        while (*input == ' ' || *input == '\t') input++;
+        while (*input == ' ' || *input == '\t') input++; // Saltamos espacios en blanco al principio
         if (*input == '\0') break;
 
         char *start;
-        if (*input == '\'' || *input == '"') {
+        if (*input == '\'' || *input == '"') { // Si arranca con comillas
             char quote = *input++;
             start = input;
             while (*input && *input != quote) input++;
@@ -24,13 +24,14 @@ int parse_args(char *input, char **args) {
                 return -1;
             }
             *input++ = '\0';
-        } else {
+        } else { // Si es una palabra sin comillas
             start = input;
             while (*input && *input != ' ' && *input != '\t') input++;
             if (*input) *input++ = '\0';
         }
+
         args[i++] = start;
-        if (i >= MAX_ARGS + 1) {
+        if (i >= MAX_ARGS + 1) { //Si se pasa de la cantidad maxargmentos, error
             fprintf(stderr, "Error: demasiados argumentos\n");
             return -1;
         }
@@ -39,7 +40,7 @@ int parse_args(char *input, char **args) {
     return 0;
 }
 
-// Verifica errores de sintaxis (pipes mal ubicados o múltiples consecutivos)
+// Verifica errores de sintaxis de los pipesss
 int check_syntax(const char *input) {
     int len = strlen(input);
     int only_pipes = 1;
