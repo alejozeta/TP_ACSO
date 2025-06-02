@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 
 #define MAX_COMMANDS 220
-#define MAX_ARGS 66
+#define MAX_ARGS 64
 
 // Parsea un string en args[], sin malloc, respetando comillas
 int parse_args(char *input, char **args) {
@@ -30,7 +30,7 @@ int parse_args(char *input, char **args) {
             if (*input) *input++ = '\0';
         }
         args[i++] = start;
-        if (i >= MAX_ARGS - 1) {
+        if (i >= MAX_ARGS + 1) {
             fprintf(stderr, "Error: demasiados argumentos\n");
             return -1;
         }
