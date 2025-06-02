@@ -93,6 +93,10 @@ int main() {
             token = strtok(NULL, "|");
         }
         if (count <= 0) continue;
+        if (count > MAX_COMMANDS) {
+            fprintf(stderr, "Error: demasiados procesos en el pipeline\n");
+            continue;
+        }
 
         int prev_fd = -1;
         int pipe_fd[2];
@@ -105,13 +109,16 @@ int main() {
 
             pid_t pid = fork();
             if (pid < 0) {
-                fprintf(stderr, "Error: fork falló al crear proceso %d\n", i);
-                continue;
+                perror("fork");
+                exit(1);
             } else if (pid == 0) {
+                // Redirigir stdin si hay input previo
                 if (prev_fd != -1) {
                     dup2(prev_fd, STDIN_FILENO);
                     close(prev_fd);
                 }
+
+                // Redirigir stdout si no es el último proceso
                 if (i < count - 1) {
                     close(pipe_fd[0]);
                     dup2(pipe_fd[1], STDOUT_FILENO);
@@ -131,6 +138,7 @@ int main() {
                 exit(1);
             }
 
+            // Cerrar pipes en el padre
             if (prev_fd != -1) close(prev_fd);
             if (i < count - 1) {
                 close(pipe_fd[1]);
@@ -138,10 +146,7 @@ int main() {
             }
         }
 
-        for (int i = 0; i < count; i++){
-            wait(NULL);
-        }
-            
+        for (int i = 0; i < count; i++) wait(NULL);
     }
 
     return 0;
