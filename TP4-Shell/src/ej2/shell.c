@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define MAX_COMMANDS 201
-#define MAX_ARGS 65
+#define MAX_COMMANDS 220
+#define MAX_ARGS 67
 
 // Parsea un string en args[], sin malloc, respetando comillas
 int parse_args(char *input, char **args) {
