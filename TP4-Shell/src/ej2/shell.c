@@ -106,7 +106,7 @@ int main() {
             pid_t pid = fork();
             if (pid < 0) {
                 write(STDERR_FILENO, "Error: no se pudo crear el proceso\n", 35);
-                _exit(1);
+                continue;
             } else if (pid == 0) {
                 if (prev_fd != -1) {
                     dup2(prev_fd, STDIN_FILENO);
