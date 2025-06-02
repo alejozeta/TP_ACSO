@@ -23,13 +23,14 @@ int parse_args(char *input, char **args) {
                 fprintf(stderr, "Error: comilla sin cerrar\n");
                 return -1;
             }
-            *input++ = '\0';
         } else {
             start = input;
             while (*input && *input != ' ' && *input != '\t') input++;
-            if (*input) *input++ = '\0';
         }
+
+        if (*input) *input++ = '\0';
         args[i++] = start;
+
         if (i >= MAX_ARGS - 1) {
             fprintf(stderr, "Error: demasiados argumentos\n");
             return -1;
