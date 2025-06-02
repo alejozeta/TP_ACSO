@@ -10,14 +10,12 @@
 // Parsea un string en args[], sin malloc, respetando comillas
 int parse_args(char *input, char **args) {
     int i = 0;
-
     while (*input) {
-        // Salteá espacios
         while (*input == ' ' || *input == '\t') input++;
         if (*input == '\0') break;
 
         char *start;
-        if (*input == '"' || *input == '\'') {
+        if (*input == '\'' || *input == '"') {
             char quote = *input++;
             start = input;
             while (*input && *input != quote) input++;
@@ -25,26 +23,20 @@ int parse_args(char *input, char **args) {
                 fprintf(stderr, "Error: comilla sin cerrar\n");
                 return -1;
             }
-            *input = '\0';
-            input++;
+            *input++ = '\0';
         } else {
             start = input;
             while (*input && *input != ' ' && *input != '\t') input++;
-            if (*input) {
-                *input = '\0';
-                input++;
-            }
+            if (*input) *input++ = '\0';
         }
-
+        args[i++] = start;
         if (i >= MAX_ARGS - 1) {
             fprintf(stderr, "Error: demasiados argumentos\n");
             return -1;
         }
-        args[i++] = start;
     }
-
     args[i] = NULL;
-    return i;
+    return 0;
 }
 
 // Verifica errores de sintaxis (pipes mal ubicados o múltiples consecutivos)
