@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 
 int main(int argc, char **argv) {
+	//Valid cantidad de argumentos
     if (argc != 4) {
         fprintf(stderr, "Uso: %s <n> <c> <s>\n", argv[0]);
         exit(1);
@@ -14,6 +15,7 @@ int main(int argc, char **argv) {
     int value = atoi(argv[2]); // valor inicial
     int start = atoi(argv[3]); // proceso que inicia
 
+	//Creo los pipes
     int pipes[n][2];
     for (int i = 0; i < n; i++) {
         if (pipe(pipes[i]) == -1) {
@@ -28,6 +30,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+	// creo los procesos hijos
     for (int i = 0; i < n; i++) {
         pid_t pid = fork();
         if (pid == -1) {
@@ -54,7 +57,6 @@ int main(int argc, char **argv) {
             exit(0);
         }
     }
-
     for (int i = 0; i < n; i++) {
         close(pipes[i][0]);
         if (i != start)
