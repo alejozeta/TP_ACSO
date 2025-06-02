@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define MAX_COMMANDS 220
+#define MAX_COMMANDS 200
 #define MAX_ARGS 64
 
 // Parsea un string en args[], sin malloc, respetando comillas
@@ -62,10 +62,10 @@ int check_syntax(const char *input) {
 }
 
 int main() {
-    char command[1024];
+    char command[4096]; // para q no se trunque
 
     while (1) {
-        if (isatty(STDIN_FILENO)) {
+        if (isatty(STDIN_FILENO)) { // uso siempre isatty para el tester
             printf("Shell> ");
             fflush(stdout);
         }
@@ -98,33 +98,37 @@ int main() {
             continue;
         }
 
-        int prev_fd = -1;
-        int pipe_fd[2];
+        int prev_fd = -1;     // fd de lectura del comando anterior
+        int pipe_fd[2];       // pipe actual (lectura y escritura)
 
         for (int i = 0; i < count; i++) {
+            // Creamos pipe si no es el último
             if (i < count - 1 && pipe(pipe_fd) == -1) {
                 perror("pipe");
                 exit(1);
             }
 
-            pid_t pid = fork();
+            pid_t pid = fork(); // creamos un hijo
             if (pid < 0) {
                 perror("fork");
                 exit(1);
             } else if (pid == 0) {
-                // Redirigir stdin si hay input previo
+                // son
+
+                // Si había un proceso anterior, conectamos su salida a nuestro stdin
                 if (prev_fd != -1) {
                     dup2(prev_fd, STDIN_FILENO);
                     close(prev_fd);
                 }
 
-                // Redirigir stdout si no es el último proceso
+                // Si no somos el último, redirigimos stdout al pipe
                 if (i < count - 1) {
                     close(pipe_fd[0]);
                     dup2(pipe_fd[1], STDOUT_FILENO);
                     close(pipe_fd[1]);
                 }
 
+                // Parseamos los argumentos y ejecutamos
                 char *args[MAX_ARGS];
                 if (parse_args(commands[i], args) != 0)
                     exit(1);
@@ -134,18 +138,23 @@ int main() {
                 }
 
                 execvp(args[0], args);
-                perror("execvp");
+                perror("execvp");      // si llega acá, algo falló
                 exit(1);
             }
 
-            // Cerrar pipes en el padre
+            // fader
+
+            // Cerramos fd anteriores ya usados
             if (prev_fd != -1) close(prev_fd);
+
+            // Guardamos el extremo de lectura del pipe actual para el próximo hijo
             if (i < count - 1) {
-                close(pipe_fd[1]);
+                close(pipe_fd[1]);  // ya no lo vamos a escribir más
                 prev_fd = pipe_fd[0];
             }
         }
 
+        // Esperamos a todos los hijos
         for (int i = 0; i < count; i++) wait(NULL);
     }
 
