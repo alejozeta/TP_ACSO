@@ -148,14 +148,13 @@ int main() {
             // Cerramos fd anteriores ya usados
             if (prev_fd != -1) close(prev_fd);
 
-            // Guardamos el extremo de lectura del pipe actual para el próximo hijo
             if (i < count - 1) {
                 close(pipe_fd[1]);  // ya no lo vamos a escribir más
                 prev_fd = pipe_fd[0];
             }
         }
 
-        // Esperamos a todos los hijos
+        // Espeo a todos los hijos
         for (int i = 0; i < count; i++) wait(NULL);
     }
 
