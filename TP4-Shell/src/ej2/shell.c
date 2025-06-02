@@ -105,7 +105,7 @@ int main() {
 
             pid_t pid = fork();
             if (pid < 0) {
-                write(STDERR_FILENO, "Error: no se pudo crear el proceso\n", 35);
+                fprintf(stderr, "Error: fork falló al crear proceso %d\n", i);
                 continue;
             } else if (pid == 0) {
                 if (prev_fd != -1) {
