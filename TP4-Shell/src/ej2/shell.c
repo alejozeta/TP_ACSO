@@ -141,9 +141,12 @@ int main() {
             if (i < count - 1) waitpid(pid, NULL, 0);
         }
 
-        // ✅ Último proceso: esperar al final
-        wait(NULL);
 
+
+        for (int i = 0; i < count; i++){
+            wait(NULL);
+        }
+            
     }
 
     return 0;
