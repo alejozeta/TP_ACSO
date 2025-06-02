@@ -136,12 +136,7 @@ int main() {
                 close(pipe_fd[1]);
                 prev_fd = pipe_fd[0];
             }
-
-            // ✅ Esperar al hijo inmediatamente salvo el último proceso
-            if (i < count - 1) waitpid(pid, NULL, 0);
         }
-
-
 
         for (int i = 0; i < count; i++){
             wait(NULL);
