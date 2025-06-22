@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "condition_variable": "cpp",
+        "__config": "cpp"
     }
 }

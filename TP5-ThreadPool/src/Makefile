@@ -2,16 +2,25 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -pthread -g
 
-# Build targets
-TARGET = threadpool
-SRC = thread-pool.cc Semaphore.cc main.cc
 
-# Link the target with object files
+# Target
+TARGET = threadpool
+SRC = thread-pool.cc Semaphore.cc tpcustomtest.cc
+
+# Default target
+all: $(TARGET)
+
 $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Clean up build artifacts
-clean:
-	rm -f $(TARGET) $(OBJ)
+run: $(TARGET)
+	./$(TARGET)
 
-.PHONY: all clean
+# Clean up build artifacts
+custom:
+	$(CXX) $(CXXFLAGS) -o $(TARGET) thread-pool.cc Semaphore.cc test_custom.cc
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean run

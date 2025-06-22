@@ -15,8 +15,14 @@
 #include <thread>      // for thread
 #include <vector>      // for vector
 #include "Semaphore.h" // for Semaphore
+#include <queue>
+#include <mutex>       // for mutex
+#include <condition_variable> // for condition_variable_any
+#include <atomic>      // for atomic
 
 using namespace std;
+
+
 
 
 /**
@@ -31,9 +37,9 @@ using namespace std;
 typedef struct worker {
     thread ts;
     function<void(void)> thunk;
-    /**
-     * Complete the definition of the worker_t struct here...
-     **/
+    mutex mtx;             // protección por si hay condiciones de carrera
+    Semaphore sema{0};         //  semáforo para sincronización, empezando en 0
+    bool available = true; // indica si está listo para trabajar
 } worker_t;
 
 class ThreadPool {
@@ -86,6 +92,15 @@ class ThreadPool {
     * In order to prevent cloning, we remove the copy constructor and the
     * assignment operator.  By doing so, the compiler will ensure we never clone
     * a ThreadPool. */
+    queue<function<void(void)>> taskQueue;
+    condition_variable_any queueCV;
+
+    mutex waitLock;
+    condition_variable_any waitCV;
+    atomic<int> pendingTasks{0}; // Tiene que ser atómica para que el dispatcher pueda decrementarla sin problemas de carrera
+
+
+
     ThreadPool(const ThreadPool& original) = delete;
     ThreadPool& operator=(const ThreadPool& rhs) = delete;
 };
