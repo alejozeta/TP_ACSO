@@ -26,6 +26,7 @@ ThreadPool::ThreadPool(size_t numThreads) : wts(numThreads), done(false) {
     dt = thread([this]() {
         dispatcher();
     });
+    dispatcherSignal = new Semaphore(0); // Inicializar el semáforo del dispatcher
 }
 
 
@@ -39,23 +40,15 @@ void ThreadPool::schedule(const function<void(void)>& thunk) {
     }
     queueCV.notify_one();  // Notificar al dispatcher que hay una nueva tarea
 
+    dispatcherSignal->signal(); // Despertar al dispatcher si está esperando
+
 }
 
 void ThreadPool::dispatcher() {
     while (true) {
         function<void(void)> nextTask;
-
-        {
-            unique_lock<mutex> lock(queueLock);
-            queueCV.wait(lock, [this]() {
-                return done || !taskQueue.empty();
-            });
-
-            if (done && taskQueue.empty()) break;
-
-            nextTask = taskQueue.front();
-            taskQueue.pop();
-        }
+        dispatcherSignal->wait(); // Espera a que haya una tarea disponible
+        if (done ) break;
 
         // Esperar hasta que haya un worker disponible
         size_t workerID = -1;
@@ -67,15 +60,33 @@ void ThreadPool::dispatcher() {
                     wts[i].available = false;
                     wts[i].thunk = nextTask;
                     workerID = i;
-                    goto ready; //salto a et ready ya que hay worker disponible
+                    break;
                 }
             }
+            // No hay workers disponibles, esperar a que haya una tarea
+            unique_lock<mutex> lk(queueLock);
+            queueCV.wait(lk, [this]() {
+                return !taskQueue.empty() || done;
+            });
         }
 
-    ready:
-        wts[workerID].sema.signal();
+        if (!(workerID ==-1)){
+            function<void(void)> task;
+            {
+                lock_guard<mutex> lk(queueLock);
+                if (!taskQueue.empty()) {
+                    task = taskQueue.front();
+                    taskQueue.pop();
+                }
+            }
+            {
+                lock_guard<mutex> lk(wts[workerID].mtx);
+                wts[workerID].thunk = task; // Asignar la tarea al worker
+            }
+            wts[workerID].sema.signal(); // Despertar al worker para que
+        }
     }
-}
+}    
 
 void ThreadPool::worker(int id) {
     worker_t& self = wts[id];
@@ -85,29 +96,33 @@ void ThreadPool::worker(int id) {
 
         if (done) break;  // en shutdown: salir
 
-        // Ejecutar el thunk
-        self.thunk();  // ejecuta la función asignada
-        
-        { //Después de ejecutar la tarea, marcar este worker como disponible
+        // Copiar la tarea a ejecutar
+        function<void(void)> task;
+        {
             lock_guard<mutex> lk(self.mtx);
-            self.available = true;
+            task = self.thunk;
         }
 
-        {
-            lock_guard<mutex> lk(waitLock);
-            pendingTasks--;
-            if (pendingTasks == 0)
-                waitCV.notify_all();
+        // Ejecutar la tarea
+        if (task) {
+            task();  // ejecutar la tarea
         }
+        {
+            lock_guard<mutex> lk(self.mtx);
+            self.available = true;  // marcar como disponible
+            pendingTasks--;         // decrementar el contador de tareas pendientes
+        }
+        waitCV.notify_all();  // Notificar al dispatcher que hay un worker disponible
+
     }
 }
 
-
 void ThreadPool::wait() {
-    unique_lock<mutex> lk(waitLock);
-    waitCV.wait(lk, [this]() {
-        return pendingTasks == 0;
+    unique_lock<mutex> lock(queueLock);
+    queueCV.wait(lock, [this]() {
+        return taskQueue.empty() && pendingTasks.load() == 0;
     });
+
 }
 
 

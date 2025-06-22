@@ -96,9 +96,10 @@ class ThreadPool {
     queue<function<void(void)>> taskQueue;
     condition_variable queueCV;
 
-    mutex waitLock;
     condition_variable waitCV;
     atomic<int> pendingTasks{0}; // Tiene que ser atómica para que el dispatcher pueda decrementarla sin problemas de carrera
+
+    Semaphore* dispatcherSignal; 
 
 
 
