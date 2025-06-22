@@ -37,7 +37,7 @@ echo -e "\n${YELLOW}🧪 Ejecutando pruebas funcionales...${RESET}"
 # Paso 4: Valgrind Memcheck
 if command -v valgrind &> /dev/null; then
   echo -e "\n${YELLOW}🔍 Valgrind Memcheck...${RESET}"
-  valgrind --tool=memcheck --leak-check=full \
+  valgrind --tool=memcheck --leak-check=full --trace-children=yes \
            ./threadpool --all &> "$MEMCHECK_LOG"
 
   if grep -qE '==.*ERROR SUMMARY: [1-9]' "$MEMCHECK_LOG" && \
