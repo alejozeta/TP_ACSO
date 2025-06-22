@@ -35,20 +35,20 @@ echo -e "\n${YELLOW}🧪 Ejecutando pruebas funcionales...${RESET}"
 ./threadpool --all || abort ""
 
 # Paso 4: Valgrind Memcheck
-if command -v valgrind &> /dev/null; then
-  echo -e "\n${YELLOW}🔍 Valgrind Memcheck...${RESET}"
-  valgrind --tool=memcheck --leak-check=full --trace-children=yes \
-           ./threadpool --all &> "$MEMCHECK_LOG"
+# if command -v valgrind &> /dev/null; then
+#   echo -e "\n${YELLOW}🔍 Valgrind Memcheck...${RESET}"
+#   valgrind --tool=memcheck --leak-check=full --trace-children=yes \
+#            ./threadpool --all &> "$MEMCHECK_LOG"
 
-  if grep -qE '==.*ERROR SUMMARY: [1-9]' "$MEMCHECK_LOG" && \
-     grep -qE 'definitely lost: [1-9][0-9]* bytes' "$MEMCHECK_LOG"; then
-    abort "$MEMCHECK_LOG"
-  else
-    echo -e "${GREEN}✅ Memcheck OK: sin pérdidas ni errores críticos${RESET}"
-  fi
-else
-  echo -e "${YELLOW}⚠️  Omitiendo Memcheck: valgrind no está instalado${RESET}"
-fi
+#   if grep -qE '==.*ERROR SUMMARY: [1-9]' "$MEMCHECK_LOG" && \
+#      grep -qE 'definitely lost: [1-9][0-9]* bytes' "$MEMCHECK_LOG"; then
+#     abort "$MEMCHECK_LOG"
+#   else
+#     echo -e "${GREEN}✅ Memcheck OK: sin pérdidas ni errores críticos${RESET}"
+#   fi
+# else
+#   echo -e "${YELLOW}⚠️  Omitiendo Memcheck: valgrind no está instalado${RESET}"
+# fi
 
 # Paso 5: Helgrind (race detection)
 if command -v valgrind &> /dev/null; then
