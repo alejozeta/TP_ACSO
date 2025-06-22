@@ -16,6 +16,9 @@ $(TARGET): $(SRC)
 run: $(TARGET)
 	./$(TARGET)
 
+valgrind: $(TARGET)
+	valgrind --leak-check=full --track-origins=yes ./$(TARGET)
+
 # Clean up build artifacts
 custom:
 	$(CXX) $(CXXFLAGS) -o $(TARGET) thread-pool.cc Semaphore.cc test_custom.cc
