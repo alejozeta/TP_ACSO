@@ -17,7 +17,8 @@ run: $(TARGET)
 	./$(TARGET)
 
 valgrind: $(TARGET)
-	valgrind --leak-check=full --track-origins=yes ./$(TARGET)
+	valgrind --tool=memcheck --leak-check=full --track-origins=yes \
+            --trace-children=yes ./$(TARGET)
 
 # Clean up build artifacts
 custom:
