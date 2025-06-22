@@ -10,8 +10,10 @@
 #endif
 
 #include "thread-pool.h"
+
 #include <iostream>
 #include <vector>
+#include <array>       // <-- aquí
 #include <thread>
 #include <mutex>
 #include <chrono>
