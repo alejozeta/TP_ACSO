@@ -16,6 +16,7 @@ $(TARGET): $(SRC)
 run: $(TARGET)
 	./$(TARGET)
 
+
 valgrind: $(TARGET)
 	valgrind --tool=memcheck --leak-check=full --track-origins=yes \
             --trace-children=yes ./$(TARGET)
