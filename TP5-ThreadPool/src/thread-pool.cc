@@ -11,12 +11,7 @@ using namespace std;
 
 ThreadPool::ThreadPool(size_t numThreads) : wts(numThreads), done(false) {
     for (size_t i = 0; i < numThreads; ++i) {
-        // Construcción directa del semáforo usando placement new
-        new (&wts[i].sema) Semaphore(0);
-
-        wts[i].available = true; // Indica que el worker i está inicialmente libre para recibir tareas
-
-        // Crear el thread después de que todo el resto esté listo
+        wts[i].available = true;
         wts[i].ts = thread([this, i]() {
             worker(i);
         });
@@ -101,6 +96,7 @@ void ThreadPool::worker(int id) {
                 waitCV.notify_all();
         }
     }
+    this_thread::yield();
 }
 
 
@@ -135,4 +131,5 @@ ThreadPool::~ThreadPool() {
     // Join del dispatcher
     if (dt.joinable())
         dt.join();
+    
 }
